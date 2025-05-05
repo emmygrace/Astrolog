@@ -65,9 +65,6 @@
 
 void DrawColor(KI col)
 {
-#ifdef WINANY
-  HPEN hpenT;
-#endif
 
   if (gi.fFile) {
 #ifdef PS
@@ -93,21 +90,6 @@ void DrawColor(KI col)
   else
     XSetForeground(gi.disp, gi.gc, rgbind[col]);
 #endif
-#ifdef WINANY
-  else {
-    if (gi.kiCur != col) {
-      hpenT = wi.hpen;
-      wi.hpen = CreatePen(PS_SOLID, gi.nScaleT
-#ifdef WIN
-        * (1 + (gs.fThick && wi.hdcPrint != NULL))
-#endif
-        , (COLORREF)rgbbmp[col]);
-      SelectObject(wi.hdc, wi.hpen);
-      if (hpenT != (HPEN)NULL)
-        DeleteObject(hpenT);
-    }
-  }
-#endif
   gi.kiCur = col;
 }
 
@@ -116,21 +98,9 @@ void DrawColor(KI col)
 
 void DrawThick(flag fThick)
 {
-#ifdef WIN
-  int kiCur;
-#endif
-
   if (fThick == gs.fThick)
     return;
   gs.fThick = fThick;
-#ifdef WIN
-  if (!gi.fFile && wi.hdcPrint != NULL) {
-    // For Windows, reset pen width to reflect new thickness.
-    kiCur = gi.kiCur;
-    gi.kiCur = -1;
-    DrawColor(kiCur);
-  }
-#endif
 }
 
 
@@ -205,31 +175,6 @@ void DrawPoint(int x, int y)
       XDrawPoint(gi.disp, gi.pmap, gi.gc, x+1, y);
       XDrawPoint(gi.disp, gi.pmap, gi.gc, x, y+1);
       XDrawPoint(gi.disp, gi.pmap, gi.gc, x+1, y+1);
-    }
-  }
-#endif
-#ifdef WIN
-  else {
-    if (wi.hdcPrint == hdcNil) {
-      SetPixel(wi.hdc, x, y, (COLORREF)rgbbmp[gi.kiCur]);
-      if (gs.fThick) {
-        SetPixel(wi.hdc, x+1, y, (COLORREF)rgbbmp[gi.kiCur]);
-        SetPixel(wi.hdc, x, y+1, (COLORREF)rgbbmp[gi.kiCur]);
-        SetPixel(wi.hdc, x+1, y+1, (COLORREF)rgbbmp[gi.kiCur]);
-      }
-    } else {
-      MoveTo(wi.hdc, x,   y);
-      LineTo(wi.hdc, x+1, y);
-    }
-  }
-#endif
-#ifdef WCLI
-  else {
-    SetPixel(wi.hdc, x, y, (COLORREF)rgbbmp[gi.kiCur]);
-    if (gs.fThick) {
-      SetPixel(wi.hdc, x+1, y, (COLORREF)rgbbmp[gi.kiCur]);
-      SetPixel(wi.hdc, x, y+1, (COLORREF)rgbbmp[gi.kiCur]);
-      SetPixel(wi.hdc, x+1, y+1, (COLORREF)rgbbmp[gi.kiCur]);
     }
   }
 #endif
@@ -330,15 +275,6 @@ void DrawBlock(int x1, int y1, int x2, int y2)
   else
     XFillRectangle(gi.disp, gi.pmap, gi.gc, x1, y1, x2-x1+1, y2-y1+1);
 #endif
-#ifdef WINANY
-  else {
-    wi.hbrush = CreateSolidBrush((COLORREF)rgbbmp[gi.kiCur]);
-    SelectObject(wi.hdc, wi.hbrush);
-    PatBlt(wi.hdc, x1, y1, x2-x1 + gi.nScaleT, y2-y1 + gi.nScaleT, PATCOPY);
-    SelectObject(wi.hdc, GetStockObject(NULL_BRUSH));
-    DeleteObject(wi.hbrush);
-  }
-#endif
 }
 
 
@@ -398,66 +334,6 @@ void AdjustGlyph(int *ch, int *x, int *y, int *fi, int *nScale,
 }
 #endif
 
-
-#ifdef WINANY
-// Draw an astrology character from a special font on the screen. Used to draw
-// sign, planet, aspect, and Nakshatra glyphs from these fonts within charts.
-
-flag DrawGlyph(int ch, int x, int y, int fi, int nScale)
-{
-  HFONT hfont, hfontPrev;
-  SIZE size;
-  char sz[3];
-  WCHAR wz[2];
-  KV kvSav;
-  int cch = 1 + (fi == fiArial && ch < 0), nSav;
-
-  // Fonts: 1=Wingdings, 2=Astro, 3=EnigmaAstrology, 4=HamburgSymbols,
-  // 5=Astronomicon, 6=Courier New, 7=Consolas, 8=Arial, 9=HanksNakshatra
-  hfont = CreateFont(12*gi.nScale*nScale/100, 0, 0, 0, !gs.fThick ? 400 : 800,
-    fFalse, fFalse, fFalse, FBetween(fi, fiCourier, fiArial) ?
-    DEFAULT_CHARSET : (fi >= fiAstro && fi != fiNakshatr ? ANSI_CHARSET :
-    SYMBOL_CHARSET), OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-    VARIABLE_PITCH | FF_DECORATIVE, rgszFontName[fi]);
-  if (hfont == NULL)
-    return fFalse;
-  hfontPrev = (HFONT)SelectObject(wi.hdc, hfont);
-  kvSav = GetTextColor(wi.hdc);
-  SetTextColor(wi.hdc, rgbbmp[gi.kiCur]);
-  nSav = SetBkMode(wi.hdc, TRANSPARENT);
-  if (FBetween(fi, fiCourier, fiArial) && cch <= 1) {
-    wz[0] = ch; wz[1] = chNull;
-    GetTextExtentPointW(wi.hdc, wz, cch, &size);
-    TextOutW(wi.hdc, x - (size.cx >> 1), y - (size.cy >> 1), wz, cch);
-  } else {
-    if (cch <= 1) {
-      sz[0] = ch; sz[1] = chNull;
-    } else
-      sprintf(sz, "%d", -ch);
-    GetTextExtentPoint(wi.hdc, sz, cch, &size);
-    TextOut(wi.hdc, x - (size.cx >> 1), y - (size.cy >> 1), sz, cch);
-  }
-  SetBkMode(wi.hdc, nSav);
-  SetTextColor(wi.hdc, kvSav);
-  SelectObject(wi.hdc, hfontPrev);
-  DeleteObject(hfont);
-  return fTrue;
-}
-
-
-// Clear and erase the entire graphics screen on Windows.
-
-void WinClearScreen(KI ki)
-{
-  wi.hbrush = CreateSolidBrush((COLORREF)rgbbmp[ki]);
-  SelectObject(wi.hdc, wi.hbrush);
-  PatBlt(wi.hdc, -gi.xOffset, -gi.yOffset, wi.xClient, wi.yClient, PATCOPY);
-  SelectObject(wi.hdc, GetStockObject(NULL_BRUSH));
-  DeleteObject(wi.hbrush);
-}
-#endif
-
-
 // Clear and erase the graphics screen or bitmap contents.
 
 void DrawClearScreen()
@@ -505,13 +381,7 @@ void DrawClearScreen()
     return;
 
   DrawColor(gi.kiOff);
-#ifdef WINANY
-  // For Windows charts clear entire window, not just the chart area.
-  if (!gi.fFile)
-    WinClearScreen(gi.kiCur);
-  else
-#endif // WINANY
-    DrawBlock(0, 0, gs.xWin - 1, gs.yWin - 1);    // Clear bitmap screen.
+  DrawBlock(0, 0, gs.xWin - 1, gs.yWin - 1);    // Clear bitmap screen.
 }
 
 
@@ -550,33 +420,8 @@ void DrawDash(int x1, int y1, int x2, int y2, int skip)
         XDrawPoint(gi.disp, gi.pmap, gi.gc, x2+1, y2+1);
       }
 #endif
-#ifdef WINANY
-      MoveTo(wi.hdc, x1, y1);
-      LineTo(wi.hdc, x2, y2);
-#ifdef WIN
-      if (wi.hdcPrint != NULL)
-        return;
-#endif
-      if (!gs.fThick) {
-        // For Windows lines, have to manually draw the last pixel.
-        SetPixel(wi.hdc, x2, y2, (COLORREF)rgbbmp[gi.kiCur]);
-      } else {
-        // Make the line thicker by drawing it four times.
-        LineTo(wi.hdc, x2+1, y2);
-        LineTo(wi.hdc, x1+1, y1);
-        LineTo(wi.hdc, x1, y1+1);
-        LineTo(wi.hdc, x2, y2+1);
-        LineTo(wi.hdc, x2+1, y2+1);
-        LineTo(wi.hdc, x1+1, y1+1);
-        LineTo(wi.hdc, x1, y1);
-      }
-#endif
       return;
     }
-#ifdef WIN
-    if (skip && wi.hdcPrint != hdcNil)
-      skip = (skip + 1)*METAMUL - 1;
-#endif
   }
 #endif // ISG
 
@@ -841,21 +686,6 @@ void DrawArc(int x1, int y1, int x2, int y2, real rRotate, real t1, real t2)
     }
   }
 #endif
-#ifdef WINANY
-  else {
-    Ellipse(wi.hdc, x1, y1, x2+1, y2+1);
-#ifdef WIN
-    if (wi.hdcPrint != NULL)
-      return;
-#endif
-    if (gs.fThick) {
-      // Make the ellipse thicker by drawing it four times.
-      Ellipse(wi.hdc, x1+1, y1,   x2+2, y2+1);
-      Ellipse(wi.hdc, x1,   y1+1, x2+1, y2+2);
-      Ellipse(wi.hdc, x1+1, y1+1, x2+2, y2+2);
-    }
-  }
-#endif
 }
 
 
@@ -913,15 +743,6 @@ void DrawEllipse2(int x1, int y1, int x2, int y2)
 #ifdef X11
   else
     XFillArc(gi.disp, gi.pmap, gi.gc, x1, y1, x2-x1, y2-y1, 0, nDegMax*64);
-#endif
-#ifdef WINANY
-  else {
-    wi.hbrush = CreateSolidBrush((COLORREF)rgbbmp[gi.kiCur]);
-    SelectObject(wi.hdc, wi.hbrush);
-    Ellipse(wi.hdc, x1, y1, x2+1, y2+1);
-    SelectObject(wi.hdc, GetStockObject(NULL_BRUSH));
-    DeleteObject(wi.hbrush);
-  }
 #endif
 }
 
@@ -1071,16 +892,6 @@ void DrawFill(int x, int y, KV kv)
     }
 #endif
   }
-#ifdef WINANY
-  else {
-    // Note that Windows FloodFill() doesn't work on printer DC's.
-    wi.hbrush = CreateSolidBrush((COLORREF)kvF);
-    SelectObject(wi.hdc, wi.hbrush);
-    ExtFloodFill(wi.hdc, x, y, (COLORREF)kvB, FLOODFILLSURFACE);
-    SelectObject(wi.hdc, GetStockObject(NULL_BRUSH));
-    DeleteObject(wi.hbrush);
-  }
-#endif
 }
 
 
@@ -1098,11 +909,6 @@ void DrawSz(CONST char *sz, int x, int y, int dt)
 #ifdef PS
   char sz2[cchSzMax];
   CONST char *pch;
-#endif
-#ifdef WINANY
-  HFONT hfont, hfontPrev;
-  KV kvSav;
-  int nSav;
 #endif
 
   cch = CwchSz(sz);
@@ -1139,20 +945,6 @@ void DrawSz(CONST char *sz, int x, int y, int dt)
     return;
   }
 #endif
-#ifdef WINANY
-  if (!gi.fFile && nFont > 0) {
-    hfont = CreateFont(6*nScale2, 0, 0, 0, !gs.fThick ? 400 : 800,
-      fFalse, fFalse, fFalse, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-      CLIP_DEFAULT_PRECIS, PROOF_QUALITY, VARIABLE_PITCH | FF_DECORATIVE,
-      rgszFontName[nFont]);
-    if (hfont == NULL)
-      return;
-    hfontPrev = (HFONT)SelectObject(wi.hdc, hfont);
-    kvSav = GetTextColor(wi.hdc);
-    SetTextColor(wi.hdc, rgbbmp[gi.kiCur]);
-    nSav = SetBkMode(wi.hdc, TRANSPARENT);
-  }
-#endif
   while (*sz) {
     ch = *sz;
     dch = 1;
@@ -1161,14 +953,6 @@ void DrawSz(CONST char *sz, int x, int y, int dt)
       ch = ChLatinFromWch(wch);
     } else if (us.nCharset == ccIBM)
       ch = ChLatinFromWch(WchFromChIBM(ch));
-#ifdef WINANY
-    if (!gi.fFile && nFont > 0) {
-      if (dch > 1)
-        TextOutW(wi.hdc, x-nScale2/2, y-nScale2*3/2, (LPCWSTR)&wch, 1);
-      else
-        TextOutA(wi.hdc, x-nScale2/2, y-nScale2*3/2, (LPCSTR)&ch, 1);
-    } else
-#endif
 #ifdef META
     if (gs.ft == ftWmf && nFont > 0) {
       gi.nFontDes = nFont;
@@ -1191,14 +975,6 @@ void DrawSz(CONST char *sz, int x, int y, int dt)
     x += xFont2*nScale2;
     sz += dch;
   }
-#ifdef WINANY
-  if (!gi.fFile && nFont > 0) {
-    SetBkMode(wi.hdc, nSav);
-    SetTextColor(wi.hdc, kvSav);
-    SelectObject(wi.hdc, hfontPrev);
-    DeleteObject(hfont);
-  }
-#endif
   gi.nScale = nScaleSav;
   if (fThin)
     DrawThick(fTrue);
@@ -1242,12 +1018,6 @@ void DrawSign(int i, int x, int y)
   fDoThin = gs.fThick && nFont == 0 && ch <= 0 && gi.nScale <= gi.nScaleT;
   if (fDoThin)
     DrawThick(fFalse);
-#ifdef WINANY
-  if (!gi.fFile && ch > 0) {
-    if (DrawGlyph(ch, x, y, nFont, nScale))
-      return;
-  }
-#endif
 #ifdef PS
   if (gs.ft == ftPS && nFont > 0 && ch > 0) {
     PsFont(nFont);
@@ -1303,14 +1073,6 @@ void DrawHouse(int i, int x, int y)
   fDoThin = gs.fThick && nFont == 0 && ch <= 0 && gi.nScale <= gi.nScaleT;
   if (fDoThin)
     DrawThick(fFalse);
-#ifdef WINANY
-  if (!gi.fFile && ch > 0) {
-    if (nFont == fiArial)
-      ch = (i <= 9 ? '0' + i : -i);
-    if (DrawGlyph(ch, x, y, nFont, nScale))
-      return;
-  }
-#endif
 #ifdef PS
   if (gs.ft == ftPS && nFont > 0 && ch > 0) {
     PsFont(nFont);
@@ -1445,12 +1207,6 @@ void DrawObject(int obj, int x, int y)
   fDoThin = gs.fThick && nFont == 0 && ch <= 0 && gi.nScale <= gi.nScaleT;
   if (fDoThin)
     DrawThick(fFalse);
-#ifdef WINANY
-  if (!gi.fFile && ch > 0) {
-    if (DrawGlyph(ch, x, y, nFont, nScale))
-      return;
-  }
-#endif
 #ifdef PS
   if (gs.ft == ftPS && nFont > 0 && ch > 0) {
     PsFont(nFont);
@@ -1543,22 +1299,6 @@ void DrawStar(int x, int y, CONST ES *pes)
   }
 
   // Draw star point.
-#ifdef WINANY
-  if (!gi.fFile
-#ifdef WIN
-    && wi.hdcPrint == hdcNil
-#endif
-    ) {
-    SetPixel(wi.hdc, x, y, (COLORREF)kv);
-    if (FOdd(gs.nAllStar)) {
-      SetPixel(wi.hdc, x, y-1, (COLORREF)kv);
-      SetPixel(wi.hdc, x-1, y, (COLORREF)kv);
-      SetPixel(wi.hdc, x+1, y, (COLORREF)kv);
-      SetPixel(wi.hdc, x, y+1, (COLORREF)kv);
-    }
-    goto LAfter;
-  }
-#endif // WINANY
   if (gi.fFile && gs.ft == ftBmp && gi.fBmp) {
     BmpSetXY(&gi.bmp, x, y, kv);
     if (FOdd(gs.nAllStar)) {
@@ -1703,12 +1443,6 @@ void DrawNakshatra(int i, int x, int y)
   fDoThin = gs.fThick && nFont == 0 && ch <= 0 && gi.nScale <= gi.nScaleT;
   if (fDoThin)
     DrawThick(fFalse);
-#ifdef WINANY
-  if (!gi.fFile && ch != -1) {
-    if (DrawGlyph(ch, x, y, nFont, nScale))
-      return;
-  }
-#endif
 #ifdef PS
   if (gs.ft == ftPS && nFont > 0 && ch > 0) {
     PsFont(nFont);
@@ -1836,9 +1570,6 @@ int KiCity(int iae)
   KI ki = kOrangeB;
   int i;
   CI ci;
-#ifdef WIN
-  flag fSav;
-#endif
 
   if (!FEnsureAtlas())
     return fFalse;
@@ -1852,16 +1583,10 @@ int KiCity(int iae)
           return -1;
       }
       ci = ciMain;
-#ifdef WIN
-      fSav = wi.fNoPopup; wi.fNoPopup = fTrue;
-#endif
       for (i = 0; i < iznMax; i++) {
         DisplayTimezoneChanges(i, 0, &ci);
         is.rgzonCol[i] = ci.zon - ci.dst;
       }
-#ifdef WIN
-      wi.fNoPopup = fSav;
-#endif
     }
     return ki;
   }
