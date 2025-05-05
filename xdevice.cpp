@@ -374,33 +374,6 @@ void BmpCopyBlock2(CONST Bitmap *bs, real x1, real y1, real x2, real y2,
 }
 
 
-#ifdef WINANY
-// Copy a 24 bit bitmap structure to a Windows DC. Since Astrolog's internal
-// bitmap structure is the same as Windows, it can be done all at once.
-
-void BmpCopyWin(CONST Bitmap *b, HDC hdc, int x, int y)
-{
-  BITMAPINFO bi;
-
-  bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bi.bmiHeader.biPlanes = 1;
-  bi.bmiHeader.biBitCount = cbPixelK << 3;
-  bi.bmiHeader.biCompression = BI_RGB;
-  bi.bmiHeader.biSizeImage = 0;
-  bi.bmiHeader.biXPelsPerMeter = bi.bmiHeader.biYPelsPerMeter = 1000;
-  bi.bmiHeader.biClrUsed = 0;
-  bi.bmiHeader.biClrImportant = 0;
-  bi.bmiColors[0].rgbBlue = bi.bmiColors[0].rgbGreen =
-    bi.bmiColors[0].rgbRed = bi.bmiColors[0].rgbReserved = 0;
-  bi.bmiHeader.biWidth  =  (b->x);
-  bi.bmiHeader.biHeight = -(b->y);
-
-  SetDIBitsToDevice(hdc, x, y, b->x, b->y, 0, 0, 0, b->y,
-    b->rgb, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
-}
-#endif
-
-
 // Draw the background bitmap onto the specified 24 bit bitmap. Implements the
 // -XI switch features.
 
@@ -480,31 +453,6 @@ flag FBmpDrawBack(Bitmap *bDest)
     return fTrue;
   }
 
-#ifdef WINANY
-  // For Windows, draw background bitmap on window using Windows API.
-  if (wi.hdcBack == NULL) {
-    wi.hdcBack = CreateCompatibleDC(wi.hdc);
-    SetMapMode(wi.hdcBack, MM_TEXT);
-    SetWindowOrg(wi.hdcBack, 0, 0); SetViewportOrg(wi.hdcBack, 0, 0);
-  }
-
-  if (b2->x != xLast || b2->y != yLast) {
-    // If background has changed size, create a new Windows Bitmap for it.
-    SelectObject(wi.hdcBack, wi.hbmpPrev);
-    if (wi.hbmpBack != NULL)
-      DeleteObject(wi.hbmpBack);
-    wi.hbmpBack = CreateCompatibleBitmap(wi.hdc, b2->x, b2->y);
-    if (wi.hbmpBack == NULL) {
-      PrintError("Failed to create color background bitmap.");
-      return fFalse;
-    }
-    wi.hbmpPrev = (HBITMAP)SelectObject(wi.hdcBack, wi.hbmpBack);
-    xLast = b2->x; yLast = b2->y;
-    BmpCopyWin(b2, wi.hdcBack, 0, 0);
-  }
-  SetStretchBltMode(wi.hdc, COLORONCOLOR);
-  StretchBlt(wi.hdc, x1, y1, x2, y2, wi.hdcBack, x3, y3, x4, y4, SRCCOPY);
-#endif
   return fTrue;
 }
 
@@ -525,13 +473,6 @@ flag FBmpDrawMap()
     return fFalse;
   if (gi.bmpWorld.rgb == NULL && !FLoadBmp(BITMAP_EARTH, &gi.bmpWorld, fFalse))
     return fFalse;
-#ifdef WINANY
-  if (!gi.fFile) {
-    if (!FAllocateBmp(&wi.bmpWin, gs.xWin, gs.yWin))
-      return fFalse;
-    bmp = &wi.bmpWin;
-  }
-#endif
 
   // Compute center coordinates and horizontal map dimensions.
   xc = (gs.xWin >> 1) - !FOdd(gs.xWin); yc = (gs.yWin >> 1) - !FOdd(gs.yWin);
@@ -691,10 +632,6 @@ flag FBmpDrawMap()
     }
   }
 
-#ifdef WINANY
-  if (!gi.fFile)
-    BmpCopyWin(bmp, wi.hdc, 0, 0);
-#endif
   return fTrue;
 }
 
@@ -713,13 +650,6 @@ flag FBmpDrawMap2(int x1, int y1, int x2, int y2,
     return fFalse;
   if (gi.bmpWorld.rgb == NULL && !FLoadBmp(BITMAP_EARTH, &gi.bmpWorld, fFalse))
     return fFalse;
-#ifdef WINANY
-  if (!gi.fFile) {
-    if (!FAllocateBmp(&wi.bmpWin, gs.xWin, gs.yWin))
-      return fFalse;
-    bmp = &wi.bmpWin;
-  }
-#endif
 
   rx = (real)gi.bmpWorld.x / rDegMax; ry = (real)gi.bmpWorld.y / rDegHalf;
   BmpSetAll(bmp, rgbbmp[gi.kiOff]);
@@ -737,10 +667,6 @@ flag FBmpDrawMap2(int x1, int y1, int x2, int y2,
     BmpCopyBlock2(&gi.bmpWorld, 0,  y3, x4,  y4, bmp, x12+1, y1, x2,  y2);
   }
 
-#ifdef WINANY
-  if (!gi.fFile)
-    BmpCopyWin(bmp, wi.hdc, 0, 0);
-#endif
   return fTrue;
 }
 
@@ -896,12 +822,7 @@ flag BeginFileX()
 
   if (us.fNoWrite)
     return fFalse;
-#ifdef WIN
-  if (gi.szFileOut == NULL)
-    return fFalse;
-#endif
 
-#ifndef WIN
   if (gi.szFileOut == NULL && ((gs.ft == ftBmp && gs.chBmpMode == 'B') ||
 #ifdef PS
     gi.fEps ||
@@ -923,10 +844,9 @@ flag BeginFileX()
       );
     PrintSzScreen(sz);
   }
-#endif // WIN
+
 
   loop {
-#ifndef WIN
     if (gi.szFileOut == NULL) {
       sprintf(sz, "Enter name of file to write %s to",
         gs.ft == ftBmp ? "bitmap" : (gs.ft == ftPS ? "PostScript" :
@@ -934,30 +854,14 @@ flag BeginFileX()
       InputString(sz, sz);
       FCloneSz(sz, &gi.szFileOut);
    }
-#else
-    // If autosaving in potentially rapid succession, ensure the file isn't
-    // being opened by some other application before saving over it again.
-    if (wi.fAutoSave) {
-      if (wi.hMutex == NULL)
-        wi.hMutex = CreateMutex(NULL, fFalse, szAppName);
-      if (wi.hMutex != NULL)
-        WaitForSingleObject(wi.hMutex, 1000);
-    }
-#endif
+
     gi.file = fopen(gi.szFileOut, (gs.ft == ftBmp && gs.chBmpMode != 'B') ||
       gs.ft == ftPS || gs.ft == ftWire ? "w" : "wb");
     if (gi.file != NULL)
       break;
-#ifdef WIN
-    if (wi.fAutoSave)
-      break;
-#endif
     sprintf(sz, "Couldn't create output file: %s", gi.szFileOut);
     PrintWarning(sz);
     FCloneSz(NULL, &gi.szFileOut);
-#ifdef WIN
-    break;
-#endif
   }
   return gi.file != NULL;
 }
@@ -1001,22 +905,6 @@ void EndFileX()
   }
 #endif
   fclose(gi.file);
-#ifdef WIN
-  if (wi.fAutoSave && wi.hMutex != NULL)
-    ReleaseMutex(wi.hMutex);
-  if (wi.wCmd == cmdSaveWallTile || wi.wCmd == cmdSaveWallCenter ||
-    wi.wCmd == cmdSaveWallStretch || wi.wCmd == cmdSaveWallFit ||
-    wi.wCmd == cmdSaveWallFill) {
-    WriteProfileString("Desktop", "TileWallpaper",
-      wi.wCmd == cmdSaveWallTile ? "1" : "0");
-    WriteProfileString("Desktop", "WallpaperStyle",
-      wi.wCmd == cmdSaveWallStretch ? "2" : (wi.wCmd == cmdSaveWallFit ? "6" :
-      (wi.wCmd == cmdSaveWallFill ? "10" : "0")));
-    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, gi.szFileOut,
-      SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-    wi.wCmd = 0;
-  }
-#endif
 }
 
 
