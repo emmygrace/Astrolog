@@ -72,11 +72,7 @@
 #else
 #define cfunI 0
 #endif
-#ifdef WIN
-#define cfunW 10
-#else
 #define cfunW 0
-#endif
 #define cfun (cfunA + cfunX + cfunI + cfunW)
 
 #define P2(n1, n2)             (((n2) << 2) | (n1))
@@ -507,22 +503,6 @@ enum _functionindex {
   // Functions related to interactive screen graphics
   fun_Xnp,
   fun_Xnf,
-#endif
-
-#ifdef WIN
-  // Functions related to Windows operations
-  funDlg,
-  funMouse,
-
-  // Astrolog command switch settings (Windows)
-  fun_WN,
-  fun_Wn,
-  fun_Wh,
-  fun_Wt,
-  fun_Wo,
-  fun_Wo0,
-  fun_Wo3,
-  fun_WZ,
 #endif
 
   // Functions related to compile time options
@@ -1047,21 +1027,6 @@ CONST FUN rgfun[cfun] = {
 {fun_Xnf, "_Xnf", 0, I_},
 #endif
 
-#ifdef WIN
-// Functions related to Windows operations
-{funDlg,   "Dlg",   0, I_},
-{funMouse, "Mouse", 1, I_I},
-
-// Astrolog command switch settings (Windows)
-{fun_WN,  "_WN",  0, I_},
-{fun_Wn,  "_Wnn", 0, I_},
-{fun_Wh,  "_Wh",  0, I_},
-{fun_Wt,  "_Wt",  0, I_},
-{fun_Wo,  "_Wo",  0, I_},
-{fun_Wo0, "_Wo0", 0, I_},
-{fun_Wo3, "_Wo3", 0, I_},
-{fun_WZ,  "_WZ",  0, I_},
-#endif
 
 // Functions related to compile time options
 {funPc,     "PC",     0, I_},
@@ -1173,9 +1138,6 @@ flag FEvalFunction(int ifun, PAR *rgpar, char *rgpchEval[2])
   real r = 0.0, r1, r2, r3, r4;
   char sz[cchSzMax];
   flag fRetOpt = fFalse, fRetReal = fFalse, fOpt = fFalse, fOptReal = fFalse;
-#ifdef WIN
-  POINT pt;
-#endif
 
   // Analyze the input and output parameter types.
   for (ipar = 0; ipar <= rgfun[ifun].nParam; ipar++) {
@@ -1759,46 +1721,13 @@ flag FEvalFunction(int ifun, PAR *rgpar, char *rgpchEval[2])
   case fun_Xnf: n = gi.nDir;   break;
 #endif
 
-#ifdef WIN
-  // Functions related to Windows operations
-  case funDlg:
-    n = KvDialog();
-    break;
-  case funMouse:
-    GetCursorPos(&pt);
-    ScreenToClient(wi.hwnd, &pt);
-    if (n1 >= 0 && FEnsureParVar(n1+1)) {
-      xi.rgparVar[n1].n   = pt.x; xi.rgparVar[n1].fReal   = fFalse;
-      xi.rgparVar[n1+1].n = pt.y; xi.rgparVar[n1+1].fReal = fFalse;
-    }
-    n = LFromWW(pt.x, pt.y);
-    break;
-
-  // Astrolog command switch settings (Windows)
-  case fun_WN:  n = wi.nTimerDelay;   break;
-  case fun_Wn:  n = wi.fNoUpdate;     break;
-  case fun_Wh:  n = wi.fHourglass;    break;
-  case fun_Wt:  n = wi.fNoPopup;      break;
-  case fun_Wo:  n = wi.fAutoSave;     break;
-  case fun_Wo0: n = wi.fAutoSaveNum;  break;
-  case fun_Wo3: n = wi.fAutoSaveWire; break;
-  case fun_WZ:  n = wi.fSaverRun;     break;
-#endif
 
   // Functions related to compile time options
   case funPc:
-#ifdef PC
-    n = 1;
-#else
     n = 0;
-#endif
     break;
   case funWin:
-#ifdef WIN
-    n = 1;
-#else
     n = 0;
-#endif
     break;
   case funX11:
 #ifdef X11
@@ -1808,18 +1737,10 @@ flag FEvalFunction(int ifun, PAR *rgpar, char *rgpchEval[2])
 #endif
     break;
   case funWcli:
-#ifdef WCLI
-    n = 1;
-#else
     n = 0;
-#endif
     break;
   case funWsetup:
-#ifdef WSETUP
-    n = 1;
-#else
     n = 0;
-#endif
     break;
   case funJplweb:
 #ifdef JPLWEB
