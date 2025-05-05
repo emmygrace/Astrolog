@@ -99,17 +99,9 @@ void DisplayCredits(void)
   char sz[cchSzDef], szT[cchSzDef];
 
   PrintW(NULL, -1);
-#ifdef PC
-  sprintf(szT, " for %s Windows", szArchCore);
-#else
   *szT = chNull;
-#endif
   sprintf(sz, "** %s version %s%s **", szAppName, szVersionCore, szT);
-#ifdef WIN
-  PrintW(sz, gs.fInverse ? kBlackA : kWhiteA);
-#else
   PrintW(sz, kWhiteA);
-#endif
   sprintf(sz, "Released %s - By Walter D. Pullen", szDateCore);
   PrintW(sz, kLtGrayA);
   PrintW(szAddressCore, kCyanA);
@@ -812,9 +804,6 @@ void DisplaySwitchesRare(void)
   PrintS(" _~Xt <string>: Set notification before sidebar drawn.");
 #ifdef ISG
   PrintS(" _~XQ <string>: Set adjustment for key press in window.");
-#endif
-#ifdef WIN
-  PrintS(" _~WQ <string>: Set adjustment for Windows menu command selection.");
 #endif
   PrintS(" _~U <string>: Set filter for extra stars.");
   PrintS(" _~U0 <string>: Set filter for extra asteroids.");
@@ -1634,9 +1623,6 @@ void DisplayKeysX(void)
 #ifdef X11
   PrintS(" Press 'B' to save current window contents to root background.");
 #endif
-#ifdef WIN
-  PrintS(" Press 'B' to resize chart display to full size of window.");
-#endif
   PrintS(" Press 'Q' to resize chart display to a square.");
   PrintS(" Press '<' and '>' to decrease/increase the scale size of the");
   PrintS("    glyphs and the size of world map.");
@@ -1684,11 +1670,6 @@ void DisplayKeysX(void)
   PrintS(" Left   mouse button: Scribble lines over chart in window.");
   PrintS(" Middle mouse button: Print coordinates of pointer on world map.");
   PrintS(" Right  mouse button: Close window and exit the program.");
-#endif
-#ifdef WINANY
-  PrintL();
-  PrintS(" Left  mouse button: Scribble lines over chart in window.");
-  PrintS(" Right mouse button: Drag maps or show chart's context menu.");
 #endif
 }
 
@@ -1787,35 +1768,6 @@ void DisplaySwitchesX(void)
 #endif
 }
 
-
-#ifdef WIN
-// Print a list of every command switch dealing with the Windows features
-// that can be passed to the program, and a description of what it does.
-// This is part of what the -H switch prints in the MS Windows version.
-
-void DisplaySwitchesW(void)
-{
-  PrintS("\nSwitches to access Windows options:");
-  PrintS(" _W <value>: Run given Windows menu command internally.");
-  PrintS(" _WN <1-32000>: Set animation update delay in milliseconds.");
-  PrintS(" _WM <1-48> <text>: Set Windows menu text for macro command.");
-  PrintS(" _Wn: Don't redraw screen until user forces update.");
-  PrintS(" _Wh: Set hourglass cursor when redrawing chart.");
-  PrintS(" _Wt: Don't display warning and error popup messages.");
-  PrintS(" _Ww <hor> <ver>: Set upper left coordinates of window.");
-  PrintS(" _WB <0-24> <0-24>: Set window scrollbar positions.");
-  PrintS(" _WT <string>: Set title bar text of Astrolog window.");
-  PrintS(" _Wo: Continually autosave graphics screen to bitmap file.");
-  PrintS(" _Wo0: Continually autosave graphics screen to numbered files.");
-  PrintS(" _Wo3: Autosave graphics screen to wireframe instead of bitmap.");
-  PrintS(" _WSg: Setup Windows program group, for current user only.");
-  PrintS(" _WSG: Setup Windows program group, for all users.");
-  PrintS(" _WSd: Setup Windows desktop icon for program.");
-  PrintS(" _WSx: Setup registering Windows file extensions for program.");
-  PrintS(" _WSu: Unregister Windows file extensions for program.");
-  PrintS(" _WZ: Treat program as screen saver, and exit next user input.");
-}
-#endif
 #endif // GRAPH
 
 
@@ -1825,10 +1777,6 @@ void DisplaySwitchesW(void)
 
 flag FPrintTables(void)
 {
-#ifdef WIN
-  if (us.fGraphics)
-    return fFalse;
-#endif
   if (us.fCredit) {
     DisplayCredits();
     is.fMult = fTrue;
@@ -1905,11 +1853,8 @@ flag FPrintTables(void)
   // on and do so, else exit. (So things like "-H -i file" will work, but
   // things like just "-H" will print and exit right away.)
 
-#ifndef WIN
   return is.fMult && !is.fHaveInfo;
-#else
-  return is.fMult;
-#endif
+
 }
 
 /* charts0.cpp */
