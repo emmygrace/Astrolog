@@ -158,11 +158,8 @@
 ** specified within the default settings file or in the program itself.
 */
 
-#ifndef PC
 #define DEFAULT_DIR "~/astrolog"
-#else
-#define DEFAULT_DIR "C:\\Astrolog"
-#endif
+
   // Change this string to directory path program should look in for the
   // astrolog.as default file, if one is not in the executable directory, the
   // current directory, or in directories indicated by Astrolog environment
@@ -294,15 +291,19 @@
 
 //#define BETA  // Uncomment to compile in beta message on startup.
 #define ASTROLOG
+
 #ifdef _DEBUG
 #define DEBUG
 #endif
+
 #ifdef SWISS
 #define EPHEM
+
 #ifdef GRAPH
 #define SWISSGRAPH
 #endif
 #endif
+
 #ifdef PLACALC
 #define EPHEM
 #endif
@@ -310,14 +311,13 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
 #include <stdio.h>
+
 #ifndef ATOF
 #include <stdlib.h>
 #endif
 #include <math.h>
-#ifdef PC
-#include <malloc.h>
-#include <windows.h>
-#endif
+
+
 #ifdef TIME
 #include <time.h>
 #endif
@@ -327,46 +327,23 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #endif
-#ifdef WIN
-#define ISG
-#define WINANY
-#include <windows.h>
-#include <commdlg.h>
-#ifdef WSETUP
-#include <objbase.h>
-#include <comdef.h>
-#include <comdefsp.h>
-#include <shlobj.h>
-#include <shobjidl.h>
-#include <shlwapi.h>
-#endif
-#include "resource.h"
-#endif // WIN
-#ifdef WCLI
-#define ISG
-#define WINANY
-#include <windows.h>
-#endif
-#ifdef PC
-#ifdef _WIN64
-#define szArchCore "64 bit"
-#else
-#define szArchCore "32 bit"
-#endif
-#define INLINE __forceinline
-#else
+
+
+
 #define INLINE inline
-#endif // PC
 
 #ifdef PS
 #define VECTOR
 #endif
+
 #ifdef META
 #define VECTOR
 #endif
+
 #ifdef WIRE
 #define VECTOR
 #endif
+
 #ifdef SWISS
 #endif // SWISS
 
@@ -395,42 +372,6 @@
 #error "If 'X11' is defined 'PC' must not be as well"
 #endif
 #endif // X11
-
-#ifdef WIN
-#ifndef GRAPH
-#error "If 'WIN' is defined 'GRAPH' must be too"
-#endif
-#ifdef X11
-#error "If 'WIN' is defined 'X11' must not be as well"
-#endif
-#ifdef WCLI
-#error "If 'WIN' is defined 'WCLI' must not be as well"
-#endif
-#ifndef PC
-#error "If 'WIN' is defined 'PC' must be too"
-#endif
-#endif // WIN
-
-#ifdef WSETUP
-#ifndef WIN
-#error "If 'WSETUP' is defined 'WIN' must be too"
-#endif
-#endif // WSETUP
-
-#ifdef WCLI
-#ifndef GRAPH
-#error "If 'WCLI' is defined 'GRAPH' must be too"
-#endif
-#ifdef X11
-#error "If 'WCLI' is defined 'X11' must not be as well"
-#endif
-#ifdef WIN
-#error "If 'WCLI' is defined 'WIN' must not be as well"
-#endif
-#ifndef PC
-#error "If 'WCLI' is defined 'PC' must be too"
-#endif
-#endif // WCLI
 
 #ifdef PS
 #ifndef GRAPH
@@ -954,26 +895,6 @@ enum _graphicschart {
   gPolar      = 22,
   gTelescope  = 23,
   gBiorhythm  = 24,
-#ifdef WIN
-  gAspect     = 25,
-  gArabic     = 26,
-  gTraTraTim  = 27,
-  gTraTraInf  = 28,
-  gTraNatTim  = 29,
-  gTraNatInf  = 30,
-  gSign       = 31,
-  gObject     = 32,
-  gHelpAsp    = 33,
-  gConstel    = 34,
-  gPlanet     = 35,
-  gRay        = 36,
-  gMeaning    = 37,
-  gSwitch     = 38,
-  gObscure    = 39,
-  gKeystroke  = 40,
-  gCredit     = 41,
-  gMax        = 42,
-#endif
 };
 
 // Colors
@@ -1331,29 +1252,12 @@ enum _terminationcode {
 #define DeallocatePCore(p) free(p)
 #define DeallocatePIf(p) if ((p) != NULL) DeallocateP(p);
 #define ldTime 2440588L
-#ifndef PC
+
 #define chDirSep '/'
 #define chSwitch '-'
-#else // PC
-#define chDirSep '\\'
-#define chSwitch '/'
-#endif // PC
+
 
 #ifdef GRAPH
-#ifdef WINANY
-#define API FAR PASCAL
-#define hdcNil ((HDC)NULL)
-#define SetWindowOrg(hdc, x, y) SetWindowOrgEx(hdc, x, y, NULL)
-#define SetWindowExt(hdc, x, y) SetWindowExtEx(hdc, x, y, NULL)
-#define SetViewportOrg(hdc, x, y) SetViewportOrgEx(hdc, x, y, NULL)
-#define SetViewportExt(hdc, x, y) SetViewportExtEx(hdc, x, y, NULL)
-#define SetWindowPosition(xo, yo, xs, ys) SetWindowPos(wi.hwnd, \
-  wi.fWindowFull ? GetTopWindow(NULL) : HWND_NOTOPMOST, xo, yo, xs, ys, 0)
-#define MoveTo(hdc, x, y) MoveToEx(hdc, x, y, NULL)
-#define HourglassOn \
-  if (wi.fHourglass) hcurPrev = SetCursor(LoadCursor(NULL, IDC_WAIT))
-#define HourglassOff if (hcurPrev != NULL) SetCursor(hcurPrev)
-#endif
 
 // Should an object in the outer wheel be restricted?
 #define FProper2(i) (!(us.nRel <= rcTransit ? ignore2[i] : ignore[i]))
@@ -2159,99 +2063,7 @@ typedef struct _OrbitalElements {
 
 #define szFileJPLCore  "astrolog.jpl"
 #define szFileExoCore  "astexo.csv"
-#ifdef WIN
-#define szFileTempCore "astrolog.tmp"
-#define szFileAutoCore "astrolog.bmp"
-#define nScrollDiv 24
-#define nScrollPage 6
-#define cchSzMaxFile 128
 
-typedef struct _WindowInternal {
-  HINSTANCE hinst;   // Instance of the Astrolog window class.
-  HWND hwndMain;     // The outer created frame window.
-  HWND hwnd;         // The current window being dealt with.
-  HMENU hmenu;       // The Astrolog main menu bar.
-  HACCEL haccel;     // Keyboard accelerator or shortcut table.
-  HDC hdc;           // The current DC bring drawn upon.
-  HDC hdcPrint;      // The current DC being printed upon.
-  HDC hdcBack;       // The current DC for the background bitmap.
-  HWND hwndAbort;    // Window of the printing abort dialog.
-  HPEN hpen;         // Pen with the current line color.
-  HBRUSH hbrush;     // Fill if any with the current color.
-  HFONT hfont;       // Font of current text size being printed.
-  HBITMAP hbmpBack;  // Bitmap for the background image.
-  HBITMAP hbmpPrev;  // Bitmap to restore after using background.
-  HANDLE hMutex;     // To ensure output file isn't already open.
-  size_t lTimer;     // Identifier for the animation timer.
-  short xScroll;     // Horizontal & vertical scrollbar position.
-  short yScroll;
-  short xClient;     // Horizontal & vertical window size.
-  short yClient;
-  int xChar;         // Horizontal & vertical font character size.
-  int yChar;
-  int xMouse;        // Horizontal & vertical mouse position.
-  int yMouse;
-  WORD wCmd;         // The currently invoked menu command.
-  LPARAM lParamRC;   // Coordinates where right click originated.
-  int nMode;         // New chart type to switch to if any.
-  int cmdCur;        // Menu command for current chart type.
-  flag fMenu;        // Do we need to repaint the menu bar?
-  flag fMenuAll;     // Do we need to redetermine all menu checks?
-  flag fNotManual;   // Is window being resized automatically?
-  flag fRedraw;      // Do we need to redraw the screen?
-  flag fCast;        // Do we need to recast the chart positions?
-  flag fAbort;       // Did the user cancel printing in progress?
-  flag fMoved;       // Has mouse been dragged since down click?
-  flag fSkipSystem;  // If should suppress the next system command.
-  int nDlgChart;     // Which chart to set in Open or Info dialog.
-  flag fWindowFull;  // Is the window in full screen mode?
-  RECT rcFull;       // Former window coordinates if full screen.
-  flag fSaverExt;    // Is executable .scr screen saver extension?
-  flag fSaverCfg;    // Is screen saver in configuration mode?
-  Bitmap bmpWin;     // Bitmap storing contents to be copied to window.
-
-  // Window user settings.
-  flag fBuffer;        // Are we drawing updates off screen?
-  flag fHourglass;     // Bring up hourglass cursor on redraws?
-  flag fChartWindow;   // Does chart change cause window resize?
-  flag fWindowChart;   // Does window resize cause chart change?
-  flag fNoUpdate;      // Do we not automatically update screen?
-  flag fNoPopup;       // Do we not display warning messages?
-  flag fSaverRun;      // Do we run Astrolog as a screen saver?
-  flag fAutoSave;      // Are we saving chart after win draw?
-  flag fAutoSaveNum;   // Autosave charts are incremental files?
-  flag fAutoSaveWire;  // Autosave wireframe instead of bitmap?
-  int nAutoSaveNum;    // Number of incremental bitmap save.
-  KI kiPen;            // The current pen scribble color.
-  UINT nTimerDelay;    // Milliseconds between animation draws.
-} WI;
-#endif
-
-#ifdef WCLI
-typedef struct _WindowInternal {
-  HINSTANCE hinst;   // Instance of the Astrolog window class.
-  HWND hwndMain;     // The outer created frame window.
-  HWND hwnd;         // The current window being dealt with.
-  HDC hdc;           // The current DC bring drawn upon.
-  HDC hdcBack;       // The current DC for the background bitmap.
-  HPEN hpen;         // Pen with the current line color.
-  HBRUSH hbrush;     // Fill if any with the current color.
-  HBITMAP hbmpBack;  // Bitmap for the background image.
-  HBITMAP hbmpPrev;  // Bitmap to restore after using background.
-  short xClient;     // Horizontal & vertical window size.
-  short yClient;
-  flag fNotManual;   // Is window being resized automatically?
-  flag fDoRedraw;
-  flag fDoResize;
-  flag fDoCast;
-  flag fWndclass;
-  int xMouse;        // Horizontal & vertical mouse position.
-  int yMouse;
-  LPARAM lParamRC;   // Coordinates where right click originated.
-  Bitmap bmpWin;     // Bitmap storing contents to be copied to window.
-  KI kiPen;          // The current pen scribble color.
-} WI;
-#endif
 
 #include "extern.h"
 
