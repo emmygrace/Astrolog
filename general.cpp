@@ -1055,16 +1055,11 @@ void PrintSz(CONST char *sz)
   wchar wch;
   int ch, dch;
   flag fWantIBM = fFalse;
-#ifndef WIN
-  int fT;
-#endif
+
 
   if (us.fNoDisplay)
     return;
-#ifdef WINANY
-  if (is.S == stdout)
-    fWantIBM = fTrue;
-#endif
+
   for (pch = (char *)sz; *pch; pch++) {
     ch = (uchar)*pch;
     if (ch != '\n') {
@@ -1079,28 +1074,6 @@ void PrintSz(CONST char *sz)
       is.cchRow++;
       is.cchCol = 0;
     }
-#ifdef WIN
-    if (is.S == stdout) {
-      // Windows text mode screen text should be output in IBM character set.
-      if (us.nCharset >= ccUTF8) {
-        pch += (UTF8ToWch((uchar *)pch, &wch) - 1);
-        if (us.nCharsetOut != ccLatin)
-          ch = ChIBMFromWch(wch);
-        else
-          ch = ChLatinFromWch(wch);
-      } else if (us.nCharset == ccLatin) {
-        if (us.nCharsetOut != ccLatin) {
-          wch = WchFromChLatin(ch);
-          ch = ChIBMFromWch(wch);
-        }
-      }
-      if ((byte)ch >= ' ') {
-        szInput[0] = ch; szInput[1] = chNull;
-        TextOut(wi.hdc, (is.cchCol - 1 - wi.xScroll * 10) * wi.xChar + 4,
-          (is.cchRow - wi.yScroll * 10) * wi.yChar, szInput, 1);
-      }
-    } else
-#endif
     if (is.nHTML == 1) {
       // HTML text can handle Unicode characters.
       if (us.nCharset > ccNone) {
@@ -1163,7 +1136,6 @@ void PrintSz(CONST char *sz)
       else
         fprintf(is.S, "%s", szInput);
     }
-#ifndef WIN
     if (ch == '\n' && is.S == stdout &&
       us.nScrollRow > 0 && is.cchRow >= us.nScrollRow) {
 
@@ -1189,26 +1161,6 @@ void PrintSz(CONST char *sz)
         inv(us.fAnsiColor); inv(us.fAnsiChar);
       }
     }
-#else
-    if (ch == '\n' && is.S == stdout && wi.hdcPrint != hdcNil &&
-      is.cchRow >= us.nScrollRow) {
-
-      // If writing to the printer, start a new page when appropriate.
-
-      is.cchRow = 0;
-      EndPage(wi.hdcPrint);
-      StartPage(wi.hdcPrint);
-      // StartPage clobbers all the DC settings.
-      SetMapMode(wi.hdcPrint, MM_ANISOTROPIC);      // For SetViewportExt
-      SetViewportOrg(wi.hdcPrint, 0, 0);
-      SetViewportExt(wi.hdcPrint, GetDeviceCaps(wi.hdcPrint, HORZRES),
-        GetDeviceCaps(wi.hdcPrint, VERTRES));
-      SetWindowOrg(wi.hdcPrint, 0, 0);
-      SetWindowExt(wi.hdcPrint, wi.xClient, wi.yClient);
-      SetBkMode(wi.hdcPrint, TRANSPARENT);
-      SelectObject(wi.hdcPrint, wi.hfont);
-    }
-#endif
   }
 }
 
@@ -1305,11 +1257,6 @@ void PrintSzFormat(CONST char *sz, flag fPopup)
 #endif
   }
   *pch2 = chNull;
-#ifdef WIN
-  if (fPopup)
-    PrintNotice(szFormat);
-  else
-#endif
   PrintSz(szFormat);
 }
 
@@ -1319,12 +1266,11 @@ void PrintSzFormat(CONST char *sz, flag fPopup)
 
 void PrintProgress(CONST char *sz)
 {
-#ifndef WIN
+
   // Progress messages are ignored in the Windows version.
   AnsiColor(kYellowA);
   fprintf(stderr, "%s\n", sz);
   AnsiColor(kDefault);
-#endif
 }
 
 
@@ -1333,18 +1279,9 @@ void PrintProgress(CONST char *sz)
 
 void PrintNotice(CONST char *sz)
 {
-#ifndef WIN
   AnsiColor(kYellowA);
   fprintf(stderr, "%s\n", sz);
   AnsiColor(kDefault);
-#else
-  char szT[cchSzDef];
-
-  if (wi.fNoPopup)
-    return;
-  sprintf(szT, "%s Notice", szAppName);
-  MessageBox(wi.hwndMain, sz, szT, MB_ICONINFORMATION);
-#endif
 }
 
 
@@ -1353,18 +1290,9 @@ void PrintNotice(CONST char *sz)
 
 void PrintWarning(CONST char *sz)
 {
-#ifndef WIN
   AnsiColor(kRedA);
   fprintf(stderr, "%s\n", sz);
   AnsiColor(kDefault);
-#else
-  char szT[cchSzDef];
-
-  if (wi.fNoPopup)
-    return;
-  sprintf(szT, "%s Warning", szAppName);
-  MessageBox(wi.hwndMain, sz, szT, MB_ICONSTOP);
-#endif
 }
 
 
@@ -1374,19 +1302,10 @@ void PrintWarning(CONST char *sz)
 
 void PrintError(CONST char *sz)
 {
-#ifndef WIN
   AnsiColor(kRedA);
   fprintf(stderr, "%s: %s\n", szAppName, sz);
   AnsiColor(kDefault);
   Terminate(tcError);
-#else
-  char szT[cchSzDef];
-
-  if (wi.fNoPopup)
-    return;
-  sprintf(szT, "%s Error", szAppName);
-  MessageBox(wi.hwndMain, sz, szT, MB_ICONEXCLAMATION);
-#endif
 }
 
 
@@ -1513,15 +1432,6 @@ void AnsiColor(int k)
   int cchSav;
 #ifdef GRAPH
   KV kv;
-#endif
-
-#ifdef WIN
-  if (is.S == stdout) {
-    if (k < 0)
-      k = kLtGrayA;
-    SetTextColor(wi.hdc, (COLORREF)rgbbmp[us.fAnsiColor ? k : kLtGrayA]);
-    return;
-  }
 #endif
 
   // Special case: If passed the "color" Reverse, and Ansi color is not only
@@ -2020,31 +1930,6 @@ char *SzLength(real len)
 
 void GetTimeNow(int *mon, int *day, int *yea, real *tim, real dst, real zon)
 {
-#ifdef PC
-  SYSTEMTIME st, lt;
-  real jd;
-  int dh;
-
-  GetSystemTime(&st);
-  if (dst == dstAuto) {
-    // Daylight field of 24 means autodetect whether Daylight Saving Time.
-
-    GetLocalTime(&lt);
-    dh = NAbs(st.wHour - lt.wHour);
-    if (dh > 12)
-      dh = 24-dh;
-    is.fDst = (dh == ciDefa.zon-1);
-    dst = (real)is.fDst;
-  }
-  if (zon == zonLMT || zon == zonLAT)
-    zon = ciDefa.lon / 15.0;
-  jd = MdytszToJulian(st.wMonth, st.wDay, st.wYear,
-    (real)(((st.wHour * 60 + st.wMinute + us.lTimeAddition) * 60 +
-    st.wSecond) * 1000 + st.wMilliseconds) / (60.0 * 60.0 * 1000.0),
-    0.0, -(zon-dst));
-  *tim = (jd - RFloor(jd)) * 24.0;
-  JulianToMdy(jd - 0.5, mon, day, yea);
-#else
   time_t curtimer;
   int min, sec, i;
   real hr;
@@ -2090,7 +1975,6 @@ void GetTimeNow(int *mon, int *day, int *yea, real *tim, real dst, real zon)
     }
   }
   is.fDst = (dst > 0.0);
-#endif // PC
 }
 #endif // TIME
 
@@ -2105,9 +1989,6 @@ char *SzProcessProgname(char *szPath)
 
   pchStart = pch = szPath;
   while (*pch) {
-#ifdef PC
-    *pch = ChUncap(*pch);    // Because PC filenames are case insensitive.
-#endif
     pch++;
   }
   pchEnd = pch;
