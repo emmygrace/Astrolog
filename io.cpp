@@ -52,11 +52,9 @@
 */
 
 #include "astrolog.h"
-#ifdef PC
-#include <io.h>
-#else
+
 #include <dirent.h>
-#endif
+
 
 
 /*
@@ -82,11 +80,7 @@ FILE *FileOpen(CONST char *szFile, int nFileMode, char *szPath)
   // Some file types we want to open as binary instead of Ascii.
   sprintf(szMode, "r%s", nFileMode >= 2 ? "b" : "");
   // Get directory containing Astrolog executable.
-#ifdef WIN
-  GetModuleFileName(wi.hinst, szExe, cchSzMax);
-#else
   sprintf(szExe, "%s", is.szProgName != NULL ? is.szProgName : "");
-#endif
   for (pch = szExe; *pch; pch++)
     ;
   while (pch > szExe && *pch != chDirSep)
@@ -1718,33 +1712,6 @@ flag FOutputSettings()
 
 void OpenDir(CONST char *szDir)
 {
-#ifdef PC
-  char szPath[cchSzMax], szFile[cchSzMax];
-  struct _finddata_t fi;
-  long hFile;
-  flag fAll = us.fWriteOld, fHaveFile;
-
-  // Only look at *.as (or *.dat) extension files.
-  sprintf(szPath, "%s\\*.%s", szDir, !fAll ? "as" : "*");
-  hFile = _findfirst(szPath, &fi);
-  fHaveFile = (hFile != -1);
-  while (fHaveFile) {
-    if (fi.name[0] == '.' || (fi.attrib & _A_SUBDIR) != 0)
-      goto LNext;
-    // Skip over astrolog.as, atlas.as, and timezone.as if present.
-    if (!fAll && (FEqSzI(fi.name, DEFAULT_INFOFILE) || FEqSzI(fi.name,
-      DEFAULT_ATLASFILE) || FEqSzI(fi.name, DEFAULT_TIMECHANGE)))
-      goto LNext;
-    sprintf(szFile, "%s\\%s", szDir, fi.name);
-    if (!FInputData(szFile))
-      break;
-    if (!FAppendCIList(&ciCore))
-      break;
-LNext:
-    fHaveFile = _findnext(hFile, &fi) == 0;
-  }
-  _findclose(hFile);
-#else
   char szPath[cchSzMax], szFile[cchSzMax], *pchFile, *pch;
   DIR *dir;
   struct dirent *ent;
@@ -1779,7 +1746,6 @@ LNext:
     sprintf(szFile, "Directory '%s' not found.", szDir);
     PrintError(szFile);
   }
-#endif
 }
 
 
@@ -2128,7 +2094,6 @@ real RParseSz(CONST char *szEntry, int pm)
 }
 
 
-#ifndef WIN
 // Stop and wait for the user to enter a line of text given a prompt to
 // display and a string buffer to fill with it.
 
@@ -2189,7 +2154,6 @@ real RInputRange(CONST char *szPrompt, real low, real high, int pm)
     PrintWarning(szLine);
   }
 }
-#endif // WIN
 
 
 // This important procedure gets all the parameters defining the chart that
@@ -2263,7 +2227,6 @@ flag FInputData(CONST char *szFile)
   }
 #endif
 
-#ifndef WIN
   // If we are to read from the file "tty" then that means prompt the user
   // for all the chart information.
 
@@ -2330,7 +2293,6 @@ flag FInputData(CONST char *szFile)
     is.S = file;
     return fTrue;
   }
-#endif // WIN
 
   // Now that the special cases are taken care of, can assume are to read from
   // a real file.
@@ -2481,28 +2443,16 @@ flag FInputData(CONST char *szFile)
 ******************************************************************************
 */
 
-#ifdef WINANY
-#include <urlmon.h>  // For URLDownloadToFile()
-#endif
 
 // Download a Web page from a URL to the specified file.
 
 flag GetURL(const char *szUrl, const char *szFile)
 {
   char sz[cchSzLine];
-#ifdef WINANY
-  HRESULT hr;
-
-  hr = URLDownloadToFile(NULL, szUrl, szFile, 0, NULL);
-  if (!FAILED(hr))
-    return fTrue;
-  sprintf(sz, "Failed to download '%s' (error %08x)\n", szUrl, hr);
-#else
   sprintf(sz, "wget -q -O %s \"%s\"", szFile, szUrl);
   if (system(sz) == 0)
     return fTrue;
   sprintf(sz, "Failed to download '%s'\n", szUrl);
-#endif
   PrintWarning(sz);
   return fFalse;
 }
@@ -2628,11 +2578,7 @@ flag GetJPLHorizons(int id, real *obj, real *objalt, real *dir, real *dist,
     }
   }
   fclose(file);
-#ifdef WINANY
-  _unlink(szFileJPLCore);
-#else
   remove(szFileJPLCore);
-#endif
   if (phase < 3) {
     if (!is.fNoEphFile) {
       is.fNoEphFile = fTrue;
