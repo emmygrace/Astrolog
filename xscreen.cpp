@@ -176,146 +176,6 @@ void InitColorsX()
 }
 
 
-#ifdef WCLI
-// Window event processor for the Windows CLI version. Most event processing
-// happens inside the InteractX() message loop.
-
-LRESULT API WndProcWCLI(HWND hwnd, UINT wMsg, WPARAM wParam, LPARAM lParam)
-{
-  HDC hdc;
-  HPEN hpen, hpenOld;
-  int x, y;
-
-  wi.hwnd = hwnd;
-  switch (wMsg) {
-
-  // The window has been resized. Change the chart size if need be.
-  case WM_SIZE:
-    wi.xClient = gs.xWin = LOWORD(lParam);
-    wi.yClient = gs.yWin = HIWORD(lParam);
-    if (!wi.fNotManual) {
-      gi.xWinResize = gs.xWin; gi.yWinResize = gs.yWin;
-    }
-    wi.fDoResize = fTrue;
-    break;
-
-  // All or part of the window needs to be redrawn. Will do so later.
-  case WM_PAINT:
-    wi.fDoRedraw = fTrue;
-    break;
-
-  // The mouse has been left clicked or dragged over the window.
-  case WM_LBUTTONDOWN:
-  case WM_MOUSEMOVE:
-    x = WLo(lParam);
-    y = WHi(lParam);
-    if (wMsg == WM_MOUSEMOVE) {
-
-      // Dragging with right mouse down rotates and tilts globes.
-      if ((wParam & MK_RBUTTON) != 0 && us.fGraphics && (fMap ||
-        gi.nMode == gMidpoint || gi.nMode == gLocal || gi.nMode == gSphere ||
-        gi.nMode == gGlobe || gi.nMode == gPolar || gi.nMode == gTelescope)) {
-        gs.rRot += (real)(x-WLo(wi.lParamRC)) * rDegHalf / (real)gs.xWin *
-          (gi.nMode == gLocal || gi.nMode == gTelescope ? -gi.zViewRatio :
-          1.0);
-        gs.rTilt += (real)(y-WHi(wi.lParamRC)) * rDegHalf / (real)gs.yWin *
-          (gi.nMode == gLocal || gi.nMode == gTelescope ? gi.zViewRatio :
-          (gi.nMode == gGlobe ? -1.0 : 1.0));
-        while (gs.rRot >= rDegMax)
-          gs.rRot -= rDegMax;
-        while (gs.rRot < 0.0)
-          gs.rRot += rDegMax;
-        while (gs.rTilt > rDegQuad)
-          gs.rTilt = rDegQuad;
-        while (gs.rTilt < -rDegQuad)
-          gs.rTilt = -rDegQuad;
-        if (gi.nMode == gMidpoint || gi.nMode == gTelescope) {
-          if (gi.nMode == gMidpoint && gs.objTrack >= 0)
-            gs.rRot = planet[gs.objTrack];
-          gs.objTrack = -1;
-        }
-        wi.lParamRC = lParam;
-        wi.fDoRedraw = fTrue;
-        break;
-      }
-
-      // Treat dragging with left mouse down as a Shift+left click.
-      if ((wParam & MK_LBUTTON) == 0 ||
-        (wParam & MK_SHIFT) || (wParam & MK_CONTROL))
-        break;
-      wParam = MK_SHIFT;
-    }
-
-    // Alt+click on a world map chart means relocate the chart there.
-    if (wMsg == WM_LBUTTONDOWN && GetKeyState(VK_MENU) < 0) {
-      if (fMap && !gs.fConstel && !gs.fMollewide) {
-        Lon = rDegHalf -
-          Mod((real)(x-gi.xOffset) / (real)gs.xWin*rDegMax - gs.rRot);
-        if (Lon < -rDegHalf)
-          Lon = -rDegHalf;
-        else if (Lon > rDegHalf)
-          Lon = rDegHalf;
-        Lat = rDegQuad-(real)(y-gi.yOffset)/(real)gs.yWin*rDegHalf;
-        if (Lat < -rDegQuad)
-          Lat = -rDegQuad;
-        else if (Lat > rDegQuad)
-          Lat = rDegQuad;
-        wi.xMouse = -1;
-        ciCore = ciMain;
-        wi.fDoCast = fTrue;
-      }
-      break;
-    }
-    hdc = GetDC(hwnd);
-    hpen = (HPEN)CreatePen(PS_SOLID, !gs.fThick ? 0 : 2,
-      (COLORREF)rgbbmp[wi.kiPen]);
-    hpenOld = (HPEN)SelectObject(hdc, hpen);
-
-    // Ctrl+click means draw a rectangle. Ctrl+Shift+click does ellipse.
-    if (wParam & MK_CONTROL) {
-      SelectObject(hdc, GetStockObject(NULL_BRUSH));
-      if (wParam & MK_SHIFT)
-        Ellipse(hdc, wi.xMouse, wi.yMouse, x, y);
-      else
-        Rectangle(hdc, wi.xMouse, wi.yMouse, x, y);
-
-    // Shift+click means draw a line from the last to current position.
-    } else if (wParam & MK_SHIFT) {
-      if (wi.xMouse >= 0) {
-        MoveTo(hdc, wi.xMouse, wi.yMouse);
-        LineTo(hdc, x, y);
-        if (wMsg == WM_MOUSEMOVE) {
-          wi.xMouse = x; wi.yMouse = y;
-        }
-      }
-
-    // A simple click means set a pixel and remember that location.
-    } else {
-      SetPixel(hdc, x, y, (COLORREF)rgbbmp[wi.kiPen]);
-      wi.xMouse = x; wi.yMouse = y;
-    }
-    SelectObject(hdc, hpenOld);
-    DeleteObject(hpen);
-    ReleaseDC(hwnd, hdc);
-    break;
-
-  // The mouse has been right clicked on the window.
-  case WM_RBUTTONDOWN:
-    if (us.fGraphics) {
-      if (fMap || gi.nMode == gLocal || gi.nMode == gSphere ||
-        gi.nMode == gGlobe || gi.nMode == gPolar || gi.nMode == gTelescope)
-        wi.lParamRC = lParam;
-    }
-    break;
-
-  default:
-    return DefWindowProc(hwnd, wMsg, wParam, lParam);
-  }
-  return fFalse;
-}
-#endif
-
-
 #ifdef ISG
 // This routine opens up and initializes a window and prepares it to be drawn
 // upon, and gets various information about the display, too.
@@ -371,69 +231,6 @@ void BeginX()
   XFillRectangle(gi.disp, gi.pmap, gi.pmgc, 0, 0, gs.xWin, gs.yWin);
 #endif // X11
 
-#ifdef WIN
-  if (wi.fChartWindow && (wi.xClient != gs.xWin ||
-    wi.yClient != gs.yWin) && wi.hdcPrint == hdcNil)
-    ResizeWindowToChart();
-  gi.xOffset = NMultDiv(wi.xClient - gs.xWin, wi.xScroll, nScrollDiv);
-  gi.yOffset = NMultDiv(wi.yClient - gs.yWin, wi.yScroll, nScrollDiv);
-  SetWindowOrg(wi.hdc, -gi.xOffset, -gi.yOffset);
-  SetWindowExt(wi.hdc, wi.xClient, wi.yClient);
-  SetMapMode(wi.hdc, MM_ANISOTROPIC);
-  SelectObject(wi.hdc, GetStockObject(NULL_PEN));
-  SelectObject(wi.hdc, GetStockObject(NULL_BRUSH));
-  if (!gs.fJetTrail || wi.hdcPrint != hdcNil)
-    PatBlt(wi.hdc, -gi.xOffset, -gi.yOffset, wi.xClient, wi.yClient,
-      gs.fInverse ? WHITENESS : BLACKNESS);
-  InitColorsX();
-#endif // WIN
-
-#ifdef WCLI
-  WNDCLASS wndclass;
-  if (!wi.fWndclass) {
-    wi.fWndclass = fTrue;
-    wi.hinst = GetModuleHandle(NULL);
-    ClearB((pbyte)&wndclass, sizeof(WNDCLASS));
-    wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_BYTEALIGNWINDOW;
-    wndclass.lpfnWndProc = WndProcWCLI;
-    wndclass.hInstance = wi.hinst;
-    wndclass.hCursor = LoadCursor((HINSTANCE)NULL, IDC_ARROW);
-    wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    wndclass.lpszClassName = szAppName;
-    if (!RegisterClass(&wndclass)) {
-      PrintError("The window class could not be registered.");
-      Terminate(tcFatal);
-    }
-  }
-  wi.hwndMain = CreateWindow(
-    szAppName,
-    szAppNameCore " " szVersionCore,
-    WS_CAPTION |
-    WS_SYSMENU |
-    WS_MINIMIZEBOX |
-    WS_MAXIMIZEBOX |
-    WS_THICKFRAME |
-    WS_VSCROLL |
-    WS_HSCROLL |
-    WS_CLIPCHILDREN |
-    WS_OVERLAPPED,
-    CW_USEDEFAULT, CW_USEDEFAULT,
-    CW_USEDEFAULT, CW_USEDEFAULT,
-    (HWND)NULL,
-    (HMENU)NULL,
-    wi.hinst,
-    (LPSTR)NULL);
-  if (wi.hwndMain == (HWND)NULL) {
-    PrintError("The window could not be created.");
-    Terminate(tcFatal);
-  }
-  wi.hwnd = wi.hwndMain;
-  ResizeWindowToChart();
-  ShowWindow(wi.hwndMain, SW_SHOW);
-  ShowScrollBar(wi.hwnd, SB_BOTH, fFalse);
-  gi.xOffset = gi.yOffset = 0;
-  InitColorsX();
-#endif // WCLI
 }
 
 
@@ -493,7 +290,6 @@ LNotNow:
 }
 
 
-#ifndef WIN
 // This routine exits graphics mode, prompts the user for a set of command
 // switches, processes them, and returns to the previous graphics with the
 // new settings in effect, allowing one to change most any setting without
@@ -526,7 +322,6 @@ void CommandLineX()
   ciMain = ciCore;
   InitColorsX();
 }
-#endif // WIN
 
 
 // Given two chart size values, adjust them such that the chart will look
@@ -545,51 +340,6 @@ void SquareX(int *x, int *y, flag fForce)
 }
 
 
-#ifdef WINANY
-// Change the pixel size of the window so its internal drawable area is the
-// dimensions of the current graphics chart. Both the upper left and lower
-// right corners of the window may change depending on the scroll position.
-
-void ResizeWindowToChart()
-{
-  HDC hdc;
-  RECT rcOld, rcCli, rcNew;
-  int xScr, yScr;
-
-  if (!us.fGraphics)
-    return;
-  if (gs.xWin == 0)
-    gs.xWin = DEFAULTX;
-  if (gs.yWin == 0)
-    gs.yWin = DEFAULTY;
-  hdc = GetDC(wi.hwnd);
-  xScr = GetDeviceCaps(hdc, HORZRES);
-  yScr = GetDeviceCaps(hdc, VERTRES);
-  ReleaseDC(wi.hwnd, hdc);
-  GetWindowRect(wi.hwnd, &rcOld);
-  GetClientRect(wi.hwnd, &rcCli);
-  rcNew.left = rcOld.left + gi.xOffset;
-  rcNew.top  = rcOld.top  + gi.yOffset;
-  rcNew.right = rcNew.left + gs.xWin + (gi.nMode == 0 ? (SIDESIZE *
-    gi.nScaleText) >> 1 : 0) + (rcOld.right - rcOld.left - rcCli.right);
-  rcNew.bottom = rcNew.top + gs.yWin +
-    (rcOld.bottom - rcOld.top - rcCli.bottom);
-  if (rcNew.right > xScr)
-    OffsetRect(&rcNew, xScr - rcNew.right, 0);
-  if (rcNew.bottom > yScr)
-    OffsetRect(&rcNew, 0, yScr - rcNew.bottom);
-  if (rcNew.left < 0)
-    OffsetRect(&rcNew, -rcNew.left, 0);
-  if (rcNew.top < 0)
-    OffsetRect(&rcNew, 0, -rcNew.top);
-  wi.fNotManual = fTrue;
-  MoveWindow(wi.hwnd, rcNew.left, rcNew.top,
-    rcNew.right - rcNew.left, rcNew.bottom - rcNew.top, fTrue);
-  wi.fNotManual = fFalse;
-}
-#endif
-
-
 #ifndef WIN
 // This routine gets called after graphics are brought up and displayed on
 // the screen. It loops, processing key presses, mouse clicks, etc, that the
@@ -602,13 +352,7 @@ void InteractX()
   XEvent xevent;
   KeySym keysym;
 #endif
-#ifdef WCLI
-  HBITMAP hbmp, hbmpOld;
-  HDC hdcWin;
-  PAINTSTRUCT ps;
-  MSG msg;
-  int nMsg;
-#endif
+
   int fAutosize = fFalse, fResize = fFalse, fRedraw = fTrue, fNoChart = fFalse,
     fBreak = fFalse, fCast = fFalse, mousex = -1, mousey = -1,
     buttonx = -1, buttony = -1, length, key, i;
@@ -618,20 +362,6 @@ void InteractX()
   while (!fBreak) {
     gi.nScale = gs.nScale/100;
     gi.nScaleText = gs.nScaleText/50;
-#ifdef WCLI
-    if (wi.fDoResize) {
-      wi.fDoResize = fFalse;
-      fResize = fTrue;
-    }
-    if (wi.fDoRedraw) {
-      wi.fDoRedraw = fFalse;
-      fRedraw = fTrue;
-    }
-    if (wi.fDoCast) {
-      wi.fDoCast = fFalse;
-      fCast = fTrue;
-    }
-#endif
 
     // Some chart windows, like the world maps and aspect grids, should always
     // be a certain size, so correct if a resize was attempted.
@@ -708,9 +438,6 @@ void InteractX()
       XFreePixmap(gi.disp, gi.pmap);
       gi.pmap = XCreatePixmap(gi.disp, gi.wind, gs.xWin, gs.yWin, gi.depth);
 #endif
-#ifdef WCLI
-      ResizeWindowToChart();
-#endif
       fRedraw = fTrue;
     }
 
@@ -742,24 +469,6 @@ void InteractX()
       if (!gs.fJetTrail)
         XFillRectangle(gi.disp, gi.pmap, gi.pmgc, 0, 0, gs.xWin, gs.yWin);
 #endif
-#ifdef WCLI
-      InvalidateRect(wi.hwnd, NULL, fFalse);
-      ClearB((pbyte)&ps, sizeof(PAINTSTRUCT));
-      hdcWin = BeginPaint(wi.hwnd, &ps);
-      wi.hdc = CreateCompatibleDC(hdcWin);
-      hbmp = CreateCompatibleBitmap(hdcWin, wi.xClient, wi.yClient);
-      hbmpOld = (HBITMAP)SelectObject(wi.hdc, hbmp);
-      if (gs.fJetTrail)
-        BitBlt(wi.hdc, 0, 0, wi.xClient, wi.yClient, hdcWin, 0, 0, SRCCOPY);
-      SetWindowOrg(wi.hdc, 0, 0);
-      SetWindowExt(wi.hdc, gs.xWin, gs.yWin);
-      SetMapMode(wi.hdc, MM_ANISOTROPIC);
-      SelectObject(wi.hdc, GetStockObject(NULL_PEN));
-      SelectObject(wi.hdc, GetStockObject(NULL_BRUSH));
-      if (!gs.fJetTrail)
-        PatBlt(wi.hdc, 0, 0, gs.xWin, gs.yWin,
-          gs.fInverse ? WHITENESS : BLACKNESS);
-#endif
       if (fNoChart)
         fNoChart = fFalse;
       else
@@ -770,14 +479,6 @@ void InteractX()
       XSync(gi.disp, 0);
       XCopyArea(gi.disp, gi.pmap, gi.wind, gi.gc,
         0, 0, gs.xWin, gs.yWin, 0, 0);
-#endif
-#ifdef WCLI
-      BitBlt(hdcWin, 0, 0, wi.xClient, wi.yClient,
-        wi.hdc, 0, 0, SRCCOPY);
-      SelectObject(wi.hdc, hbmpOld);
-      DeleteObject(hbmp);
-      DeleteDC(wi.hdc);
-      EndPaint(wi.hwnd, &ps);
 #endif
 #ifdef EXPRESS
       // Notify AstroExpression the screen has just been redrawn.
@@ -850,30 +551,6 @@ void InteractX()
         if (length == 1) {
           key = xkey[0];
 #endif // X11
-
-#ifdef WCLI
-      if (PeekMessage(&msg, (HWND)NULL, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        nMsg = LOWORD(msg.message);
-        if (nMsg != WM_CHAR && nMsg != WM_KEYDOWN) {
-          switch (nMsg) {
-          case WM_SIZE:
-            wi.xClient = gs.xWin = LOWORD(msg.lParam);
-            wi.yClient = gs.yWin = HIWORD(msg.lParam);
-            fResize = fTrue;
-            break;
-          case WM_PAINT:
-            fRedraw = fTrue;
-            break;
-          default:
-            wi.kiPen = coldrw;
-            DispatchMessage(&msg);
-          }
-        } else {
-          key = (int)msg.wParam;
-          if (nMsg == WM_KEYDOWN)
-            key = FBetween(key, VK_F1, VK_F12) ? key - VK_F1 + 201 : 0;
-#endif // WCLI
 
 #ifdef EXPRESS
           // May want to adjust current key if AstroExpression says to do so.
@@ -1230,9 +907,6 @@ void InteractX()
       } // switch
     } // if
 #endif
-#ifdef WCLI
-    } // if
-#endif
   } // while
 }
 
@@ -1248,12 +922,8 @@ void EndX()
   XDestroyWindow(gi.disp, gi.wind);
   XCloseDisplay(gi.disp);
 #endif
-#ifdef WCLI
-  UnregisterClass(szAppName, wi.hinst);
-#endif
 }
 #endif // ISG
-#endif // WIN
 
 
 /*
@@ -2103,10 +1773,6 @@ flag FActionX()
 
   gi.nScaleT = gs.ft == ftPS ? PSMUL : (gs.ft == ftWmf ? METAMUL :
     (gs.ft == ftWire ? WIREMUL : 1));
-#ifdef WIN
-  if (wi.hdcPrint != hdcNil)
-    gi.nScaleT = METAMUL;
-#endif
   gi.nScale = gs.nScale/100;
   gi.nScaleText = gs.nScaleText/50;
   gi.nScaleTextT2 = gi.nScaleText * gi.nScaleT;
@@ -2125,26 +1791,12 @@ flag FActionX()
     gs.xWin = gs.yWin =
       (gi.nGridCell + (us.nRel <= rcDual))*CELLSIZE*gi.nScale + 1;
   } else if (gs.fKeepSquare && fSquare) {
-#ifdef WIN
-    if (wi.hdcPrint == hdcNil) {
-      if (fSidebar)
-        gs.xWin -= (SIDESIZE * gi.nScaleText) >> 1;
-#endif
       n = Min(gs.xWin, gs.yWin);
       gs.xWin = gs.yWin = n;
-#ifdef WIN
-      if (fSidebar)
-        gs.xWin += (SIDESIZE * gi.nScaleText) >> 1;
-    }
-#endif
   } else if (fMap) {
     gs.xWin = nDegMax*gi.nScale;
     gs.yWin = nDegHalf*gi.nScale;
   }
-#ifdef WIN
-  if (fSidebar)
-    gs.xWin -= (SIDESIZE * gi.nScaleText) >> 1;
-#endif
 
   if (gi.fFile) {
     if (!BeginFileX())
@@ -2249,12 +1901,8 @@ flag FActionX()
       }
     } else
 #endif
-#ifndef WIN
       InteractX();    // Window's up; process commands given to window now.
     EndX();
-#else
-    DrawChartX();
-#endif
   }
 #endif // ISG
   return fTrue;
