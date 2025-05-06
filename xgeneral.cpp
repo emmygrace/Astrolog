@@ -1385,12 +1385,6 @@ void DrawAspect(int asp, int x, int y)
   fDoThin = gs.fThick && nFont == 0 && ch <= 0 && gi.nScale <= gi.nScaleT;
   if (fDoThin)
     DrawThick(fFalse);
-#ifdef WINANY
-  if (!gi.fFile && ch > 0) {
-    if (DrawGlyph(ch, x, y, nFont, nScale))
-      return;
-  }
-#endif
 #ifdef PS
   if (gs.ft == ftPS && nFont > 0 && ch > 0) {
     PsFont(nFont);

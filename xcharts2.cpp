@@ -1266,11 +1266,7 @@ void XChartTransit(flag fTrans, flag fProg)
   }
 
   // Determine scrolling position if too many aspects to fit on bitmap.
-#ifdef WIN
-  cRow = (cRow - (gs.yWin / (yRow + 1))) * wi.yScroll / nScrollDiv;
-#else
   cRow = 0;
-#endif
 
   // Draw the individual aspects present in order.
   iy = 0;
@@ -1466,10 +1462,6 @@ flag XChartRising()
   dy = ys / ymax; dy = Max(dy, 1); ys = ymax * dy;
   x2 = x1 + xs + 1; y2 = y1 + ys + 1;
   dx = us.nDivision; dx = Min(dx, xs); dx = Min(dx, 240); dx = Max(dx, 4);
-#ifdef WINANY
-  if (!gi.fFile && !FAllocateBmp(&gi.bmpRising, xs, ys))
-    return fFalse;
-#endif
 
   // Draw object combinations and their colors.
   y = y2 + yFontT + gi.nScale*10;
@@ -1537,9 +1529,6 @@ flag XChartRising()
           alt = altT + (altB - altT) * rT;
         }
         if (!gi.fBmp || !gs.fColor || (gi.fFile && gs.ft > ftBmp)
-#ifndef WINANY
-          || !gi.fFile
-#endif
           )
           n = (n << 1) | (alt >= 0.0);
         else
@@ -1555,12 +1544,8 @@ flag XChartRising()
       if (gs.fColor) {
         for (i = 0; i < dy; i++) {
           if (!gi.fFile) {
-#ifdef WINANY
-            BmpSetXY(&gi.bmpRising, xp, yp + i, !gi.fBmp ? rgbbmp[ki[n]] : n);
-#else
             DrawColor(ki[n]);
             DrawPoint(x1+1 + xp, y1+1 + yp + i);
-#endif
           } else if (gs.ft == ftBmp) {
             SetXY(x1+1 + xp, y1+1 + yp + i, !gi.fBmp ? ki[n] : n);
           } else {
@@ -1571,20 +1556,11 @@ flag XChartRising()
       } else {
         n += (imax == 2 && n >= 2) + (imax >= 3 && n >= 4)*2;
         for (i = 0; i < dy; i++) {
-#ifdef WINANY
-          if (!gi.fFile)
-            DrawPointDither(&gi.bmpRising, xp, yp + i, n, imax);
-          else
-#endif
           DrawPointDither(NULL, x1+1 + xp, y1+1 + yp + i, n, imax);
         }
       }
     }
   }
-#ifdef WINANY
-  if (!gi.fFile)
-    BmpCopyWin(&gi.bmpRising, wi.hdc, x1+1, y1+1);
-#endif
 
   // Label vertical (month) axis.
   y = y1;

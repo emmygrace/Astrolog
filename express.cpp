@@ -506,11 +506,8 @@ enum _functionindex {
 #endif
 
   // Functions related to compile time options
-  funPc,
-  funWin,
+
   funX11,
-  funWcli,
-  funWsetup,
   funJplweb,
 
   // Programming functions (related to variables and control flow)
@@ -1030,10 +1027,7 @@ CONST FUN rgfun[cfun] = {
 
 // Functions related to compile time options
 {funPc,     "PC",     0, I_},
-{funWin,    "WIN",    0, I_},
 {funX11,    "X11",    0, I_},
-{funWcli,   "WCLI",   0, I_},
-{funWsetup, "WSETUP", 0, I_},
 {funJplweb, "JPLWEB", 0, I_},
 
 // Programming functions (related to variables and control flow)
@@ -1723,24 +1717,9 @@ flag FEvalFunction(int ifun, PAR *rgpar, char *rgpchEval[2])
 
 
   // Functions related to compile time options
-  case funPc:
-    n = 0;
-    break;
-  case funWin:
-    n = 0;
-    break;
+
   case funX11:
-#ifdef X11
     n = 1;
-#else
-    n = 0;
-#endif
-    break;
-  case funWcli:
-    n = 0;
-    break;
-  case funWsetup:
-    n = 0;
     break;
   case funJplweb:
 #ifdef JPLWEB

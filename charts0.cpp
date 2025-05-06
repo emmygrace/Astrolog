@@ -549,9 +549,6 @@ void DisplaySwitches(void)
 
 #ifdef GRAPH
   DisplaySwitchesX();
-#ifdef WIN
-  DisplaySwitchesW();  // Windows version has its own set of switches too.
-#endif
 #endif // GRAPH
 }
 

@@ -2235,17 +2235,9 @@ void DrawChartX()
   case gMoons:
     XChartMoons();
     break;
-#ifdef WIN
-  case gTraTraTim:
-  case gTraTraInf:
-#endif
   case gTraTraGra:
     XChartTransit(fFalse, is.fProgress);
     break;
-#ifdef WIN
-  case gTraNatTim:
-  case gTraNatInf:
-#endif
   case gTraNatGra:
     XChartTransit(fTrue, is.fProgress);
     break;
