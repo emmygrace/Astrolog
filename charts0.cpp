@@ -458,11 +458,6 @@ void DisplaySwitches(void)
   PrintS(
     " _bs: Use less accurate Moshier formulas instead of Swiss Ephemeris.");
 #endif
-#ifdef PLACALC
-  if (!us.fNoPlacalc)
-    PrintS(
-      " _bp: Use less accurate Placalc ephemeris instead of Swiss Ephemeris.");
-#endif
 #ifdef MATRIX
   if (!us.fNoPlacalc) {
     PrintS(" _bm: Use inaccurate Matrix formulas when ephemeris unavailable.");

@@ -87,15 +87,7 @@ US us = {
   1,
 #endif
   0, 0, 0,
-#ifdef PLACALC
-#ifndef SWISS
-  1,
-#else
   0,
-#endif
-#else
-  0,
-#endif
 #ifdef EPHEM
   0,
 #else

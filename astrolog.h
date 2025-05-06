@@ -104,10 +104,6 @@
               /* Ephemeris most accurate calculation features and formulas */
               /* to be compiled into the program (as accessed with -b).    */
 
-#define PLACALC /* Comment out this #define if you don't want the Placalc */
-                /* less accurate calculation features and formulas to be  */
-                /* compiled into the program (as accessed with -bp).      */
-
 #define MATRIX /* Comment out this #define if you don't want the Matrix  */
                /* much less accurate calculation formulas to be compiled */
                /* into the program (as accessed with -bm).               */
@@ -292,9 +288,6 @@
 #endif
 #endif
 
-#ifdef PLACALC
-#define EPHEM
-#endif
 
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
@@ -339,12 +332,6 @@
 /*
 ** Make sure only legal combinations of options are active.
 */
-
-#ifdef PLACALC
-#ifndef MATRIX
-#error "If 'PLACALC' is defined 'MATRIX' must be too"
-#endif
-#endif // PLACALC
 
 #ifdef X11
 #ifndef GRAPH

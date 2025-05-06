@@ -80,10 +80,6 @@ long MdyToJulian(int mon, int day, int yea)
   if (!us.fPlacalcPla)
     jd = SwissJulDay(mon, day, yea, 12.0, fGreg) + rRound;
 #endif
-#ifdef PLACALC
-  if (us.fPlacalcPla)
-    jd = julday(mon, day, yea, 12.0, fGreg) + rRound;
-#endif
   return (long)RFloor(jd);
 #else
   return 0;        // Shouldn't ever be reached.
@@ -119,12 +115,6 @@ void JulianToMdy(real JD, int *mon, int *day, int *yea)
 #ifdef SWISS
   if (!us.fPlacalcPla) {
     SwissRevJul(JD, JD >= 2299171.0 /* Oct 15, 1582 */, mon, day, yea, &tim);
-    return;
-  }
-#endif
-#ifdef PLACALC
-  if (us.fPlacalcPla) {
-    revjul(JD, JD >= 2299171.0 /* Oct 15, 1582 */, mon, day, yea, &tim);
     return;
   }
 #endif
@@ -984,11 +974,6 @@ void ComputeEphem(real t)
         fRet = FSwissPlanet(i, JulianDayFromTime(t), objOrbit,
           &r1, &r2, &r3, &r4, &r5, &r6);
       }
-#endif
-#ifdef PLACALC
-      if (!fSwiss)
-        fRet = FPlacalcPlanet(i, JulianDayFromTime(t), objCentCalc != oEar,
-          &r1, &r2, &r3, &r4, &r5, &r6);
 #endif
     }
     if (!fRet)

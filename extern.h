@@ -521,15 +521,6 @@ extern void ComputeLunar P((real *, real *, real *, real *));
 #endif
 
 
-#ifdef PLACALC
-// From placalc2.cpp
-
-extern flag FPlacalcPlanet
-  P((int, real, flag, real *, real *, real *, real *, real *, real *));
-extern double julday P((int, int, int, double, int));
-extern void revjul P((double, int, int *, int *, int *, double *));
-#endif
-
 
 // From charts0.cpp
 
