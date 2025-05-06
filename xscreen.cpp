@@ -151,12 +151,6 @@ void InitColorsX()
   }
 #endif
 
-#ifdef WIN
-  // Don't print on a black background unless user really wants that.
-  if (wi.hdcPrint != NULL && us.fSmartSave)
-    fInverse = fTrue;
-#endif
-
   gi.kiOn   = kMainA[!fInverse];
   gi.kiOff  = kMainA[fInverse];
   gi.kiLite = gs.fColor ? kMainA[2+fInverse] : gi.kiOn;

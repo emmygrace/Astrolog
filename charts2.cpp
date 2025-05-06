@@ -437,10 +437,6 @@ void CastRelation(void)
 
   for (i = 1; i <= cChart; i++) {
     ciCore = *rgpci[i];
-#ifdef WIN
-    if (i == 1 && us.nRel == rcMidpoint)
-      ciCore = ciMain = ciSave;
-#endif
     if (i == 2 && us.nRel <= rcTransit) {
       CopyRgb(ignore, ignoreSav, sizeof(ignore));
       for (j = 0; j <= is.nObj; j++)
@@ -536,9 +532,7 @@ void CastRelation(void)
     }
     ciMain = ciCore;
     CastChart(0);
-#ifndef WIN
     us.nRel = rcNone;  // Turn off so don't move to midpoint again.
-#endif
 
   // There are a couple of non-astrological charts, which only require the
   // number of days that have passed between the two charts to be done.

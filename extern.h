@@ -552,9 +552,6 @@ extern void DisplayArabic P((void));
 #ifdef GRAPH
 extern void DisplayKeysX P((void));
 extern void DisplaySwitchesX P((void));
-#ifdef WIN
-extern void DisplaySwitchesW P((void));
-#endif
 #endif // GRAPH
 extern flag FPrintTables P((void));
 
@@ -696,13 +693,6 @@ extern XSizeHints hint;
 extern char xkey[];
 extern KV rgbind[cColor];
 extern KV fg, bg;
-#endif
-#ifdef WIN
-extern CONST int ikPalette[cColor];
-extern CONST int rgcmdMode[gMax];
-#endif
-#ifdef WCLI
-extern WI wi;
 #endif
 extern char *szWheelX[cRing+1];
 
@@ -859,9 +849,6 @@ extern flag FAllocateBmp P((Bitmap *, int, int));
 extern flag FLoadBmp P((CONST char *, Bitmap *, flag));
 extern void BmpCopyBlock P((CONST Bitmap *, int, int, int, int,
   Bitmap *, int, int, int, int));
-#ifdef WINANY
-extern void BmpCopyWin P((CONST Bitmap *, HDC, int, int));
-#endif
 extern flag FBmpDrawBack P((Bitmap *));
 extern flag FBmpDrawMap P((void));
 extern flag FBmpDrawMap2 P((int, int, int, int, real, real, real, real));
@@ -992,105 +979,5 @@ extern int NProcessSwitchesRareX P((int, char **, int, flag, flag, flag));
 extern int DetectGraphicsChartMode P((void));
 extern flag FActionX P((void));
 #endif // GRAPH
-
-
-#ifdef WIN
-// From wdriver.cpp
-
-extern WI wi;
-extern OPENFILENAME ofn;
-extern PRINTDLG prd;
-extern CHOOSECOLOR chc;
-extern char szFileName[cchSzMaxFile], szFileTitle[cchSzMaxFile], *szFileTemp;
-
-#define TextClearScreen() WinClearScreen(gs.fInverse ? kWhiteA : kBlackA)
-#define CheckMenu(cmd, f) \
-  CheckMenuItem(wi.hmenu, (uint)cmd, f ? MF_CHECKED : MF_UNCHECKED);
-#define CheckPopup(cmd, f) \
-  CheckMenuItem(hmenu, (uint)cmd, f ? MF_CHECKED : MF_UNCHECKED);
-#define WiCheckMenu(cmd, f) CheckMenu(cmd, f); wi.fMenu = fTrue
-#define RadioMenu(cmd1, cmd2, i) \
-  CheckMenuRadioItem(wi.hmenu, (uint)cmd1, (uint)cmd2, i, MF_BYCOMMAND);
-#define WiRadioMenu(cmd1, cmd2, i) RadioMenu(cmd1, cmd2, i); wi.fMenu = fTrue
-#define WiDoDialog(pfn, dlg) \
-  dlgproc = (DLGPROC)MakeProcInstance(pfn, wi.hinst); \
-  DialogBox(wi.hinst, MAKEINTRESOURCE(dlg), wi.hwnd, dlgproc); \
-  FreeProcInstance((FARPROC)dlgproc)
-
-#define SetCheck(id, f) CheckDlgButton(hdlg, id, f)
-#define SetRadio(id, idLo, idHi) CheckRadioButton(hdlg, idLo, idHi, id)
-#define SetEdit(id, sz) SetDlgItemText(hdlg, id, (LPCSTR)sz)
-#define SetEditN(id, n) SetDlgItemInt(hdlg, id, n, fTrue)
-#define SetList(id, sz) \
-  SendDlgItemMessage(hdlg, id, LB_ADDSTRING, 0, (LPARAM)(LPCSTR)sz)
-#define SetListN(id, sz, n, v) \
-  v = SetListSz(hdlg, id, sz); \
-  SendDlgItemMessage(hdlg, id, LB_SETITEMDATA, v, (LPARAM)n);
-#define ClearList(id) SendDlgItemMessage(hdlg, id, LB_RESETCONTENT, 0, 0);
-#define SetCombo(id, sz) \
-  SendDlgItemMessage(hdlg, id, CB_ADDSTRING, 0, (LPARAM)(LPCSTR)sz)
-#define ClearCombo(id) SendDlgItemMessage(hdlg, id, CB_RESETCONTENT, 0, 0);
-#define GetCheck(id) IsDlgButtonChecked(hdlg, id)
-#define GetEdit(id, sz) GetDlgItemText(hdlg, id, sz, cchSzMax)
-#define EnsureN(n, f, sz) if (!(f)) { ErrorEnsure(n, sz); return fTrue; }
-#define EnsureR(r, f, sz) EnsureN((int)r, f, sz)
-
-extern LRESULT API WndProc P((HWND, UINT, WPARAM, LPARAM));
-extern int NProcessSwitchesW P((int, char **, int, flag, flag, flag));
-extern void BootExternal P((CONST char *, CONST char *));
-extern WORD WCmdFromRc P((int));
-extern void SetRel P((int));
-extern void ProcessState P((void));
-extern int NWmCommand P((WORD));
-extern void API RedoMenu P((void));
-extern flag FFilePaste P((void));
-extern flag API FRedraw P((void));
-extern flag FCreateDesktopIcon P((void));
-extern flag FCreateProgramGroup P((flag));
-extern flag FRegisterExtensions P((void));
-extern flag FUnregisterExtensions P((void));
-
-
-// From wdialog.cpp
-
-extern void SetEditSz P((HWND, int, CONST char *));
-extern void SetEditR P((HWND, int, real, int));
-extern void SetEditMDYT P((HWND, int, int, int, int, int, int, int, real));
-extern void SetEditSZOA P((HWND, int, int, int, int, real, real, real, real));
-extern void SetEditColor P((HWND, int, KI));
-extern int GetEditN P((HWND, int));
-extern real GetEditR P((HWND, int));
-extern int SetListSz P((HWND, int, CONST char *));
-extern void ErrorEnsure P((int, CONST char *));
-extern KV KvDialog P((void));
-extern flag API DlgOpenChart P((void));
-extern flag API DlgSaveChart P((void));
-extern flag API DlgOpenDir P((void));
-extern flag API DlgPrint P((void));
-extern flag API DlgAbortProc P((HDC, int));
-extern BOOL API DlgAbort P((HWND, uint, WPARAM, LPARAM));
-extern flag API DlgList     P((HWND, uint, WORD, LONG));
-extern flag API DlgCommand  P((HWND, uint, WORD, LONG));
-extern flag API DlgColor    P((HWND, uint, WORD, LONG));
-extern flag API DlgInfo     P((HWND, uint, WORD, LONG));
-extern flag API DlgDefault  P((HWND, uint, WORD, LONG));
-extern flag API DlgInfoAll  P((HWND, uint, WORD, LONG));
-extern flag API DlgAspect   P((HWND, uint, WORD, LONG));
-extern flag API DlgObject   P((HWND, uint, WORD, LONG));
-extern flag API DlgObject2  P((HWND, uint, WORD, LONG));
-extern flag API DlgObjectM  P((HWND, uint, WORD, LONG));
-extern flag API DlgCustom   P((HWND, uint, WORD, LONG));
-extern flag API DlgCustomS  P((HWND, uint, WORD, LONG));
-extern flag API DlgRestrict P((HWND, uint, WORD, LONG));
-extern flag API DlgStar     P((HWND, uint, WORD, LONG));
-extern flag API DlgMoons    P((HWND, uint, WORD, LONG));
-extern flag API DlgCalc     P((HWND, uint, WORD, LONG));
-extern flag API DlgDisplay  P((HWND, uint, WORD, LONG));
-extern flag API DlgTransit  P((HWND, uint, WORD, LONG));
-extern flag API DlgProgress P((HWND, uint, WORD, LONG));
-extern flag API DlgChart    P((HWND, uint, WORD, LONG));
-extern flag API DlgGraphics P((HWND, uint, WORD, LONG));
-extern flag API DlgAbout    P((HWND, uint, WORD, LONG));
-#endif // WIN
 
 /* extern.h */
