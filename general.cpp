@@ -664,11 +664,7 @@ void EnsureStarBright()
 
     // Matrix formulas have star brightnesses in a simple table.
     for (i = 1; i <= cStar; i++) {
-#ifdef MATRIX
-      rStarBrightDef[i] = rStarBrightMatrix[i];
-#else
       rStarBrightDef[i] = 1.0;
-#endif
       rStarBright[i] = rStarBrightDef[i];
       // No distance data, so assume each star is 100 LY away.
       rStarBrightDistDef[i] = cp0.dist[oNorm+i] = 100.0 * rLYToAU;

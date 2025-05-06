@@ -458,12 +458,6 @@ void DisplaySwitches(void)
   PrintS(
     " _bs: Use less accurate Moshier formulas instead of Swiss Ephemeris.");
 #endif
-#ifdef MATRIX
-  if (!us.fNoPlacalc) {
-    PrintS(" _bm: Use inaccurate Matrix formulas when ephemeris unavailable.");
-    PrintS(" _bU: Use inaccurate Matrix formulas for fixed stars only.");
-  }
-#endif
 #ifdef JPLWEB
   PrintS(" _bJ: Use most accurate JPL Web query instead of Swiss Ephemeris.");
 #endif
@@ -619,14 +613,6 @@ void DisplaySwitchesRare(void)
     " _Ye[..]HSBNTV <obj> <index>: Toggle heliocentric, sidereal zodiac,");
   PrintS(
     "  barycentric, true node, true position, or topocentric for object.");
-#endif
-#ifdef MATRIX
-  if (!us.fNoPlacalc) {
-    PrintS(
-      " _YE <obj> <semi-major axis> <eccentricity (3)> <inclination (3)>");
-    PrintS("  <perihelion (3)> <ascending node (3)> <time offset (3)>:");
-    PrintS("  Change orbit of object to be the given elements.");
-  }
 #endif
 #ifdef SWISS
   PrintS(" _YU <obj> <name>: Change position of star to sefstars.txt entry.");

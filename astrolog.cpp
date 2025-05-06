@@ -436,9 +436,6 @@ int NProcessSwitchesRare(int argc, char **argv, int pos,
   pbyte pb;
   int *lpn;
   real *lpr;
-#ifdef MATRIX
-  OE oe;
-#endif
 #ifdef SWISS
   char szName[cchSzDef], *pch;
 #endif

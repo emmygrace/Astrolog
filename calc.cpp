@@ -65,10 +65,6 @@
 
 long MdyToJulian(int mon, int day, int yea)
 {
-#ifdef MATRIX
-  if (!us.fEphemFiles)
-    return MatrixMdyToJulian(mon, day, yea);
-#endif
 #ifdef EPHEM
   int fGreg = fTrue;
   double jd;
@@ -106,12 +102,6 @@ void JulianToMdy(real JD, int *mon, int *day, int *yea)
   double tim;
 #endif
 
-#ifdef MATRIX
-  if (!us.fEphemFiles) {
-    MatrixJulianToMdy(JD, mon, day, yea);
-    return;
-  }
-#endif
 #ifdef SWISS
   if (!us.fPlacalcPla) {
     SwissRevJul(JD, JD >= 2299171.0 /* Oct 15, 1582 */, mon, day, yea, &tim);
@@ -515,15 +505,6 @@ void ComputeHouses(int housesystem)
   Vtx = Mod(is.Vtx + rDegHalf);
 
   switch (housesystem) {
-#ifdef MATRIX
-  case hsPlacidus:      HousePlacidus();       break;
-  case hsKoch:          HouseKoch();           break;
-  case hsCampanus:      HouseCampanus();       break;
-  case hsMeridian:      HouseMeridian();       break;
-  case hsRegiomontanus: HouseRegiomontanus();  break;
-  case hsMorinus:       HouseMorinus();        break;
-  case hsTopocentric:   HouseTopocentric();    break;
-#endif
   case hsEqual:         HouseEqual();          break;
   case hsPorphyry:      HousePorphyry(is.Asc); break;
   case hsAlcabitius:    HouseAlcabitius();     break;
@@ -573,40 +554,13 @@ void ComputeHouses(int housesystem)
 
 void ComputeStars(real t, real Off)
 {
-#ifdef MATRIX
-  int i;
-  real x, y, z;
-#endif
 
   // Read in star positions.
 
 #ifdef SWISS
   if (FCmSwissStar())
     SwissComputeStars(t, fFalse);
-  else
 #endif
-  {
-#ifdef MATRIX
-    for (i = 1; i <= cStar; i++) {
-      x = rStarData[i*6-6]; y = rStarData[i*6-5]; z = rStarData[i*6-4];
-      planet[oNorm+i] = x*rDegMax/24.0 + y*15.0/60.0 + z*0.25/60.0;
-      x = rStarData[i*6-3]; y = rStarData[i*6-2]; z = rStarData[i*6-1];
-      if (x < 0.0) {
-        neg(y); neg(z);
-      }
-      planetalt[oNorm+i] = x + y/60.0 + z/60.0/60.0;
-      // Convert to ecliptic zodiac coordinates.
-      EquToEcl(&planet[oNorm+i], &planetalt[oNorm+i]);
-      planet[oNorm+i] = Mod(planet[oNorm+i] + rEpoch2000 + Off);
-      if (!us.fSidereal)
-        ret[oNorm+i] = !us.fVelocity ? rDegMax/25765.0/rDayInYear : 1.0;
-      SphToRec(cp0.dist[oNorm+i], planet[oNorm+i], planetalt[oNorm+i],
-        &space[oNorm+i].x, &space[oNorm+i].y, &space[oNorm+i].z);
-    }
-#endif
-  }
-}
-
 
 // Given the list of computed planet positions, sort and compose the final
 // index list based on what order the planets are supposed to be printed in.
@@ -1220,36 +1174,11 @@ real CastChart(int nContext)
     SwissHouse(us.fProgress && us.nProgress != ptSolarArc ? is.Tp : is.T,
       OO, AA, us.nHouseSystem,
       &is.Asc, &is.MC, &is.RA, &is.Vtx, &is.EP, &is.OB, &is.rOff, &is.rNut);
-  } else
-#endif
-  {
-#ifdef MATRIX
-    is.rOff = ProcessInput();
-    ComputeVariables(&is.Vtx);
-    if (us.fGeodetic)                // Check for -G geodetic chart.
-      is.RA = Mod(-OO);
-    is.MC  = CuspMidheaven();        // Calculate Ascendant & Midheaven.
-    is.Asc = CuspAscendant();
-    is.EP  = CuspEastPoint();
-    ComputeHouses(us.nHouseSystem);  // Go calculate house cusps.
-#endif
   }
+#endif
   // This value (often same as is.RA) is frequently used, so compute once.
   cp0.lonMC = Tropical(is.MC); r = 0.0;
   EclToEqu(&cp0.lonMC, &r);
-
-#ifdef MATRIX
-  // Go calculate planet, Moon, and North Node positions.
-
-  if (FCmMatrix() || (FCmPlacalc() && us.fUranian)) {
-    ComputePlanets();
-    if (!ignore[oMoo] || !ignore[oNod] || !ignore[oSou] || !ignore[oFor]) {
-      ComputeLunar(&planet[oMoo], &planetalt[oMoo],
-        &planet[oNod], &planetalt[oNod]);
-      ret[oNod] = -1.0;
-    }
-  }
-#endif
 
   // Go calculate star positions if -U switch in effect.
 

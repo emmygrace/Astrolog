@@ -489,39 +489,6 @@ extern void SwissRevJul P((real, int, int *, int *, int *, real *));
 #endif
 
 
-#ifdef MATRIX
-// From matrix.cpp
-
-#define IoeFromObj(obj) \
-  ((obj) < oMoo ? 0 : ((obj) <= cPlanet ? (obj)-2 : (obj)-uranLo+cPlanet-2))
-
-extern OE rgoe[oVes+cUran-2];
-
-extern long MatrixMdyToJulian P((int, int, int));
-extern void MatrixJulianToMdy P((real, int *, int *, int *));
-extern real ProcessInput P((void));
-extern void PolToRec P((real, real, real *, real *));
-extern real RecToSph P((real, real, real));
-extern void ComputeVariables P((real *));
-extern real CuspMidheaven P((void));
-extern real CuspAscendant P((void));
-extern real CuspEastPoint P((void));
-extern void HousePlacidus P((void));
-extern void HouseKoch P((void));
-extern void HouseCampanus P((void));
-extern void HouseMeridian P((void));
-extern void HouseRegiomontanus P((void));
-extern void HouseMorinus P((void));
-extern void HouseTopocentric P((void));
-extern real ReadThree P((real, real, real));
-extern void RecToSph2 P((real, real, real, real *, real *, real *));
-extern void ErrorCorrect P((int, real *, real *, real *));
-extern void ComputePlanets P((void));
-extern void ComputeLunar P((real *, real *, real *, real *));
-#endif
-
-
-
 // From charts0.cpp
 
 extern void PrintW P((CONST char *, int));

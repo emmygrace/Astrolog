@@ -79,10 +79,6 @@
 #define ENVIRON /* Comment out this #define if your system doesn't have  */
                 /* environment variables or can't compile calls to them. */
 
-//#define ATOF /* Comment out this #define if you have a system in which  */
-             /* 'atof' and related functions aren't defined in stdio.h, */
-             /* such as most PC's, Linux, VMS compilers, and NeXT's.    */
-
 #define PROTO /* Comment out this #define if you have an ancient compiler */
               /* which doesn't allow full Ansi function prototypes. This  */
               /* is for programmers only and has no effect on executable. */
@@ -103,10 +99,6 @@
 #define SWISS /* Comment out this #define if you don't want the Swiss      */
               /* Ephemeris most accurate calculation features and formulas */
               /* to be compiled into the program (as accessed with -b).    */
-
-#define MATRIX /* Comment out this #define if you don't want the Matrix  */
-               /* much less accurate calculation formulas to be compiled */
-               /* into the program (as accessed with -bm).               */
 
 #define PS /* Comment out this #define if you don't want the ability to */
            /* generate charts in the PostScript graphics format.        */
