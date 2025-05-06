@@ -72,11 +72,7 @@ GS gs = {
   fFalse, fFalse, fFalse, fFalse, fFalse, fFalse, fTrue, fFalse, fFalse,
   fFalse, fFalse,
   DEFAULTX, DEFAULTY,
-#ifdef WIN
-  -10,
-#else
   0,
-#endif
   200, 100, 0, 0, 0, 3, 1, 0, 0.0, 0.0, oMoo, BITMAPMODE, 25.0, 1, 0,
   8.5, 11.0, NULL, 0, 25, 11, 1, NULL, oCore, 0.0, 1000, 0, 600,
   1, 1, 1, 2, 2, 1, fFalse, fFalse, fTrue, 7, 0, NULL, NULL};
@@ -108,47 +104,6 @@ GI gi = {
 #endif
   };
 
-#ifdef WIN
-WI wi = {
-  (HINSTANCE)NULL, (HWND)NULL, (HWND)NULL, (HMENU)NULL, (HACCEL)NULL, hdcNil,
-  hdcNil, hdcNil, (HWND)NULL, (HPEN)NULL, (HBRUSH)NULL, (HFONT)NULL,
-  (HBITMAP)NULL, (HBITMAP)NULL, (HANDLE)NULL,
-  0, 0, 0, 0, 0, 0, 0, -1, -1,
-  0, 0, 0, -1, fFalse, fTrue, fFalse, fFalse, fTrue, fFalse, fFalse, fFalse,
-  1, fFalse, {0, 0, 0, 0}, fFalse, fFalse, {0, 0, 0, NULL},
-
-  // Window user settings.
-  fTrue, fTrue, fFalse, fTrue, fFalse, fFalse, fFalse, fFalse, fFalse, fFalse,
-  0, kBlack, 1000};
-
-OPENFILENAME ofn = {
-  sizeof(OPENFILENAME), (HWND)NULL, (HINSTANCE)NULL, NULL, NULL, 0, 1, NULL,
-  cchSzMaxFile, NULL, cchSzMaxFile, NULL, NULL, OFN_OVERWRITEPROMPT, 0, 0,
-  NULL, 0, NULL, NULL};
-
-PRINTDLG prd = {
-  sizeof(PRINTDLG), (HWND)NULL, (HGLOBAL)NULL, (HGLOBAL)NULL, hdcNil,
-  PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC | PD_USEDEVMODECOPIES,
-  0, 0, 0, 0, 1, (HINSTANCE)NULL, 0, NULL, NULL, (LPCSTR)NULL, (LPCSTR)NULL,
-  (HGLOBAL)NULL, (HGLOBAL)NULL};
-
-CHOOSECOLOR chc = {
-  sizeof(CHOOSECOLOR), (HWND)NULL, (HWND)NULL, 0, NULL,
-  CC_FULLOPEN | CC_RGBINIT, 0L, NULL, NULL};
-
-char szFileName[cchSzMaxFile];
-char szFileTitle[cchSzMaxFile];
-char *szFileTemp = szFileTempCore;
-#endif
-
-#ifdef WCLI
-WI wi = {
-  (HINSTANCE)NULL, (HWND)NULL, (HWND)NULL, hdcNil, hdcNil, (HPEN)NULL,
-  (HBRUSH)NULL, (HBITMAP)NULL, (HBITMAP)NULL,
-  0, 0, fFalse, fFalse, fFalse, fFalse, fFalse, 0, 0, 0,
-  {0, 0, 0, NULL}, kLtGray};
-#endif
-
 // Color tables for Astrolog's graphics palette.
 
 CONST KV rgbbmpDef[cColor] = {
@@ -165,21 +120,7 @@ KV rgbbmp[cColor];
 #ifdef X11
 KV rgbind[cColor], fg, bg;
 #endif
-#ifdef WIN
-CONST int ikPalette[cColor] =
-  {-0, -1, 1, 4, 6, 3, -8, 5, -3, -2, -4, -5, -7, 2, 7, -6};
-// Map _graphicschart enum to Windows commands
-CONST int rgcmdMode[gMax] = {0,
-  cmdChartList, cmdChartWheel, cmdChartGrid, cmdChartMidpoint, cmdChartHorizon,
-  cmdChartOrbit, cmdChartSector, cmdChartCalendar, cmdChartInfluence,
-  cmdChartEsoteric, cmdChartAstroGraph, cmdChartEphemeris, cmdChartRising,
-  cmdChartLocal, cmdTransit, cmdTransit, cmdChartMoons, cmdChartExo,
-  cmdChartSphere, cmdChartMap, cmdChartGlobe, cmdChartPolar, cmdChartTelescope,
-  0/*cmdRelBiorhythm*/, cmdChartAspect, cmdChartArabic, cmdTransit, cmdTransit,
-  cmdTransit, cmdTransit, cmdHelpSign, cmdHelpObject, cmdHelpAspect,
-  cmdHelpConstellation, cmdHelpPlanetInfo, cmdHelpRay, cmdHelpMeaning,
-  cmdHelpSwitch, cmdHelpObscure, cmdHelpKeystroke, cmdHelpCredit};
-#endif
+
 char *szWheelX[cRing+1] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 // These are the actual color arrays and variables used by the program.
