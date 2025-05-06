@@ -63,20 +63,9 @@
 ** can be disabled even if you are running a system that supports X windows.
 */
 
-//#define PC /* Comment out this #define if you have a Unix, Mac, or other */
-           /* system that isn't a generic PC running DOS or MS Windows.  */
 
 #define X11 /* Comment out this #define if you don't have X windows, or */
             /* else have them and don't wish to compile in X graphics.  */
-
-//#define WIN /* Comment out this #define if you don't have MS Windows, or */
-            /* else have them but want a command line version instead.   */
-
-//#define WCLI /* Comment out this #define if you don't want to compile a    */
-             /* command line Windows version that can still popup windows. */
-
-//#define WSETUP /* Comment out this #define if you don't want to compile a */
-               /* modern Windows version that can do its own (un)setup.   */
 
 #define JPLWEB /* Comment out this #define if you don't want to compile in */
                /* features to access the JPL Horizons Website online.      */
@@ -163,8 +152,7 @@
   // Change this string to directory path program should look in for the
   // astrolog.as default file, if one is not in the executable directory, the
   // current directory, or in directories indicated by Astrolog environment
-  // variables. For PC systems, use two backslashes instead of one forward
-  // slash to divide subdirectories. For Unix systems, it may be necessary to
+  // variables. For Unix systems, it may be necessary to
   // expand "~" to the full path. Files will still be found even if not set!
 
 #define CHART_DIR DEFAULT_DIR
@@ -236,11 +224,11 @@
 #define PSGUTTER 9      // Points of white space on PostScript page edge.
 
 #ifdef GRAPH            // For graphics, this char affects how bitmaps are
-#ifndef PC              // written. 'N' is written like with the 'bitmap
+// written. 'N' is written like with the 'bitmap
 #define BITMAPMODE 'C'  // program, 'C' is compacted somewhat (files have
-#else                   // less spaces), and 'V' is compacted even more.
-#define BITMAPMODE 'B'  // 'A' means write as rectangular Ascii text file.
-#endif                  // 'B' means write as Windows bitmap (.bmp) file.
+// less spaces), and 'V' is compacted even more.
+// 'A' means write as rectangular Ascii text file.
+// 'B' means write as Windows bitmap (.bmp) file.
 #endif // GRAPH
 
 /*
@@ -361,15 +349,6 @@
 #ifdef X11
 #ifndef GRAPH
 #error "If 'X11' is defined 'GRAPH' must be too"
-#endif
-#ifdef WIN
-#error "If 'X11' is defined 'WIN' must not be as well"
-#endif
-#ifdef WCLI
-#error "If 'X11' is defined 'WCLI' must not be as well"
-#endif
-#ifdef PC
-#error "If 'X11' is defined 'PC' must not be as well"
 #endif
 #endif // X11
 

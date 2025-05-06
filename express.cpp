@@ -1026,7 +1026,6 @@ CONST FUN rgfun[cfun] = {
 
 
 // Functions related to compile time options
-{funPc,     "PC",     0, I_},
 {funX11,    "X11",    0, I_},
 {funJplweb, "JPLWEB", 0, I_},
 
