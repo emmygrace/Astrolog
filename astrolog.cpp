@@ -202,26 +202,16 @@ LNextLine:
   // Here either do a normal chart or some kind of relationship chart.
 
   if (!us.nRel) {
-#ifndef WIN
     // If chart info not in memory yet, then prompt the user for it.
     if (!is.fHaveInfo && !FInputData(szTtyCore))
       return;
     ciMain = ciCore;
     CastChart(1);
-#else
-    ciMain = ciCore;
-    if (wi.fCast || cSequenceLine > 0 || fDoList) {
-      wi.fCast = fFalse;
-      CastChart(1);
-    }
-#endif
   } else {
     ciMain = ciCore;
     CastRelation();
   }
-#ifndef WIN
   ciSave = ciMain;
-#endif
 
 #ifdef GRAPH
   if (us.fGraphics) {
@@ -299,7 +289,6 @@ LDone:
 }
 
 
-#ifndef WIN
 // Reset a few variables to their default values they have upon startup of the
 // program. We don't reset all variables, just the most volatile ones. This is
 // called when in the -Q loop to reset things like which charts to display,
@@ -312,7 +301,6 @@ void InitVariables(void)
   FCloneSz(NULL, &is.szFileScreen);
   ClearB((pbyte)&us.fListing, (int)((pbyte)&us.fLoop - (pbyte)&us.fListing));
 }
-#endif
 
 
 /*
@@ -407,7 +395,6 @@ int NParseCommandLine(char *szLine, char **argv)
 }
 
 
-#ifndef WIN
 // This routine is called by the main program to interactively prompt the user
 // for command switches and parameters, entered in the same format as they
 // would be on a command line. This needs to be called with certain systems
@@ -435,7 +422,6 @@ int NPromptSwitches(char *line, char *argv[MAXSWITCHES])
   PrintL();
   return NParseCommandLine(line, argv);
 }
-#endif
 
 
 // This subprocedure is like FProcessSwitches() below, except that it only
@@ -1131,11 +1117,7 @@ int NProcessSwitchesRare(int argc, char **argv, int pos,
 #endif
 
   case 'B':
-#ifndef WIN
     putchar(chBell);
-#else
-    MessageBeep((UINT)-1);
-#endif
     break;
 
   case '0':
@@ -2356,10 +2338,6 @@ flag FProcessSwitches(int argc, char **argv)
         SwitchF(us.fHouse3D);
         break;
       }
-#ifdef WIN
-      if (argc <= 1 && wi.fSaverCfg)
-        return fFalse;
-#endif
       if (FErrorArgc("c", argc, 1))
         return fFalse;
       i = NParseSz(argv[1], pmSystem);
@@ -2749,14 +2727,6 @@ flag FProcessSwitches(int argc, char **argv)
       argc -= i; argv += i;
       break;
 
-#ifdef WIN
-    case 'W':
-      i = NProcessSwitchesW(argc, argv, ich, fOr, fAnd, fNot);
-      if (i < 0)
-        return fFalse;
-      argc -= i; argv += i;
-      break;
-#endif
 #endif // GRAPH
 
     case '0':
@@ -2931,9 +2901,6 @@ flag FProcessSwitches(int argc, char **argv)
 
 void InitProgram()
 {
-#ifdef WIN
-  char sz[cchSzMax], *pch;
-#endif
   int i;
 
   Assert(starHi == cObj && cObj == objMax-1);
@@ -2988,55 +2955,6 @@ void InitProgram()
     szDrawAspect[i]  = szDrawAspectDef[i];
     szDrawAspect2[i] = szDrawAspectDef2[i];
   }
-#endif
-#ifdef WIN
-  GetModuleFileName(wi.hinst, sz, cchSzMax);
-  for (pch = sz; *pch; pch++)
-    ;
-  if (pch - sz > 4 && FEqSz(pch - 4, ".scr"))
-    wi.fSaverExt = fTrue;
-  // Ensure _graphicschart enum aligns with rgcmdMode array.
-  Assert(rgcmdMode[gWheel]      == cmdChartList);
-  Assert(rgcmdMode[gHouse]      == cmdChartWheel);
-  Assert(rgcmdMode[gGrid]       == cmdChartGrid);
-  Assert(rgcmdMode[gMidpoint]   == cmdChartMidpoint);
-  Assert(rgcmdMode[gHorizon]    == cmdChartHorizon);
-  Assert(rgcmdMode[gOrbit]      == cmdChartOrbit);
-  Assert(rgcmdMode[gSector]     == cmdChartSector);
-  Assert(rgcmdMode[gCalendar]   == cmdChartCalendar);
-  Assert(rgcmdMode[gDisposit]   == cmdChartInfluence);
-  Assert(rgcmdMode[gEsoteric]   == cmdChartEsoteric);
-  Assert(rgcmdMode[gAstroGraph] == cmdChartAstroGraph);
-  Assert(rgcmdMode[gEphemeris]  == cmdChartEphemeris);
-  Assert(rgcmdMode[gRising]     == cmdChartRising);
-  Assert(rgcmdMode[gLocal]      == cmdChartLocal);
-  Assert(rgcmdMode[gTraTraGra]  == cmdTransit);
-  Assert(rgcmdMode[gTraNatGra]  == cmdTransit);
-  Assert(rgcmdMode[gMoons]      == cmdChartMoons);
-  Assert(rgcmdMode[gExo]        == cmdChartExo);
-  Assert(rgcmdMode[gSphere]     == cmdChartSphere);
-  Assert(rgcmdMode[gWorldMap]   == cmdChartMap);
-  Assert(rgcmdMode[gGlobe]      == cmdChartGlobe);
-  Assert(rgcmdMode[gPolar]      == cmdChartPolar);
-  Assert(rgcmdMode[gTelescope]  == cmdChartTelescope);
-  Assert(rgcmdMode[gBiorhythm]  == 0/*cmdRelBiorhythm*/);
-  Assert(rgcmdMode[gAspect]     == cmdChartAspect);
-  Assert(rgcmdMode[gArabic]     == cmdChartArabic);
-  Assert(rgcmdMode[gTraTraTim]  == cmdTransit);
-  Assert(rgcmdMode[gTraTraInf]  == cmdTransit);
-  Assert(rgcmdMode[gTraNatTim]  == cmdTransit);
-  Assert(rgcmdMode[gTraNatInf]  == cmdTransit);
-  Assert(rgcmdMode[gSign]       == cmdHelpSign);
-  Assert(rgcmdMode[gObject]     == cmdHelpObject);
-  Assert(rgcmdMode[gHelpAsp]    == cmdHelpAspect);
-  Assert(rgcmdMode[gConstel]    == cmdHelpConstellation);
-  Assert(rgcmdMode[gPlanet]     == cmdHelpPlanetInfo);
-  Assert(rgcmdMode[gRay]        == cmdHelpRay);
-  Assert(rgcmdMode[gMeaning]    == cmdHelpMeaning);
-  Assert(rgcmdMode[gSwitch]     == cmdHelpSwitch);
-  Assert(rgcmdMode[gObscure]    == cmdHelpObscure);
-  Assert(rgcmdMode[gKeystroke]  == cmdHelpKeystroke);
-  Assert(rgcmdMode[gCredit]     == cmdHelpCredit);
 #endif
 }
 
@@ -3204,13 +3122,6 @@ void FinalizeProgram(flag fSkip)
 #ifdef X11
   DeallocatePIf(gs.szDisplay);
 #endif
-#ifdef WINANY
-  DeallocatePIf(wi.bmpWin.rgb);
-#endif
-#ifdef WIN
-  if (ofn.lpstrFile != szFileName)
-    DeallocatePIf(ofn.lpstrFile);
-#endif
   if (fSkip)
     return;
   if (is.cAlloc != 0) {
@@ -3228,7 +3139,6 @@ void FinalizeProgram(flag fSkip)
 }
 
 
-#ifndef WIN
 // The main program, the starting point for Astrolog, follows. This routine
 // basically consists of a loop, inside which we read a command line, and go
 // process it, before actually calling a routine to display astrology.
@@ -3285,6 +3195,5 @@ LBegin:
   Terminate(tcOK);    // The only standard place to exit Astrolog is here.
   return 0;
 }
-#endif // WIN
 
 /* astrolog.cpp */
