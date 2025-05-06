@@ -1480,9 +1480,6 @@ flag DisplayAtlasLookup(CONST char *szIn, size_t lDialog, int *piae)
     clist = 0, icn, istateUS, istateCA, iae, nPower, i, j, fSav;
   flag fTimezoneChanges;
   real zon;
-#ifdef WIN
-  HWND hdlg = (HWND)lDialog;
-#endif
 
   if (!FEnsureAtlas())
     return fFalse;
@@ -1623,23 +1620,12 @@ flag DisplayAtlasLookup(CONST char *szIn, size_t lDialog, int *piae)
       sprintf(sz, "%s (%s, %s)", SzCity(rgiae[i]), pch, SzZone(zon));
     } else
       sprintf(sz, "%s (%s)", SzCity(rgiae[i]), pch);
-#ifdef WIN
-    if (hdlg != NULL) {
-      SetListN(dlIn, sz, rgiae[i], j);
-      continue;
-    }
-#endif
     PrintSz(sz);
     PrintL();
   }
 
   // It's possible no matches were found.
   if (clist <= 0) {
-#ifdef WIN
-    if (hdlg != NULL) {
-      SetListN(dlIn, "(No matches found)", -1, j);
-    } else
-#endif
       PrintSz("No matches found.");
   }
   if (lDialog != 0)
@@ -1660,9 +1646,6 @@ flag DisplayAtlasNearby(real lon, real lat, size_t lDialog, int *piae,
     i, j, fSav;
   flag fTimezoneChanges;
   real rDist, zon;
-#ifdef WIN
-  HWND hdlg = (HWND)lDialog;
-#endif
 
   if (!FEnsureAtlas())
     return fFalse;
@@ -1730,12 +1713,6 @@ flag DisplayAtlasNearby(real lon, real lat, size_t lDialog, int *piae,
     } else
       sprintf(sz, "%d %s: %s (%s)", rgn[i], us.fEuroDist ? "km" : "mi",
         SzCity(rgiae[i]), pch);
-#ifdef WIN
-    if (hdlg != NULL) {
-      SetListN(dlIn, sz, rgiae[i], j);
-      continue;
-    }
-#endif
     PrintSz(sz);
     PrintL();
   }
@@ -1850,9 +1827,6 @@ flag DisplayTimezoneChanges(int iznIn, size_t lDialog, CI *ci)
     iyea, yea2, irue, crue, cn, ici, idMon, dd, i, j, k;
   ZoneChange *pzc, *pzc2;
   RuleEntry *pru;
-#ifdef WIN
-  HWND hdlg = (HWND)lDialog;
-#endif
 
   if (!FEnsureTimezoneChanges())
     return fFalse;
@@ -1881,12 +1855,6 @@ flag DisplayTimezoneChanges(int iznIn, size_t lDialog, CI *ci)
     PrintL();
     AnsiColor(kDefault);
   }
-#ifdef WIN
-  else {
-    sprintf(sz, "Time changes within zone: %s", rgszzn[izn]);
-    SetListN(dlIn, sz, -1, k);
-  }
-#endif
   izce = rgizcChange[izcn];
   czce = rgizcChange[izcn+1] - izce;
   cn = off = doff = 0;
@@ -1942,13 +1910,6 @@ flag DisplayTimezoneChanges(int iznIn, size_t lDialog, CI *ci)
     sprintf(sz, "%s %s: %s: %s%s%s", SzDate(mon, day, yea, fFalse),
       SzTime(tim / 3600, tim / 60 % 60, us.fSeconds ? tim % 60 : -1),
       sz1, dst == 0 ? "ST" : "DT", sz2, sz3);
-#ifdef WIN
-    if (lDialog != 0) {
-      sprintf(sz1, "%.3s %s", szDay[DayOfWeek(mon, day, yea)], sz);
-      SetListN(dlIn, sz1, -1, k);
-      goto LSkip;
-    }
-#endif
     sprintf(sz1, "%3d: ", cn); PrintSz(sz1);
     k = DayOfWeek(mon, day, yea);
     AnsiColor(kRainbowA[k + 1]);
@@ -2073,13 +2034,6 @@ LSkip:
           SzTime(tim / 3600, tim / 60 % 60, us.fSeconds ? tim % 60 : -1),
           SzHMS(doff),
           dst == 0 ? "ST" : "DT", sz2);
-#ifdef WIN
-        if (lDialog != 0) {
-          sprintf(sz, "%.3s %s", szDay[DayOfWeek(mon, day, yea)], sz1);
-          SetListN(dlIn, sz, -1, k);
-          continue;
-        }
-#endif
         AnsiColor(kDefault);
         sprintf(sz, "%3d: ", cn); PrintSz(sz);
         k = DayOfWeek(mon, day, yea);
